@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="eu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TETRA — Irratiak</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><div class="brand"><b>📻 TETRA</b><span>Irrati eta mugimenduen kudeaketa</span></div>
+<nav><button class="navAktibo">Irratiak</button><button id="navMov">Movimenduak</button><button id="navHist">Historia</button><button id="navExp">Esportatu</button></nav><button id="logout">Irten</button></header>
+<main>
+<section id="login"><h2>Sarbidea</h2><form id="loginForm"><input id="email" type="email" placeholder="Posta elektronikoa" required><input id="password" type="password" placeholder="Pasahitza" required><button>Sartu</button></form><p id="mezua"></p></section>
+<section id="app" hidden>
+<div class="layout">
+<section class="zerrenda"><div class="tit"><div><h1>Irrati TETRA</h1><span id="irratiaKop">0 irrati</span></div><button id="irratiBerria">＋ Irrati berria</button></div>
+<div class="bilaketa"><input id="bilaketa" placeholder="Bilatu ZKA, alias, marka edo modeloaren arabera…"></div>
+<table><thead><tr><th>ZKA</th><th>Alias</th><th>Marka</th><th>Modeloa</th><th>Egoera</th><th></th></tr></thead><tbody id="irratiaRows"></tbody></table></section>
+
+<section id="irratiXehetasuna" class="xehetasuna" hidden>
+<div class="botoiak"><button id="itxiIrratia">← Zerrendara</button><button id="historiala">◷ Historia</button><button id="excel">↓ Excel</button><button id="pdf">↓ PDF</button><button id="editIrratia" class="nagusia">✎ Editatu</button></div>
+<div class="izenburua"><div><h1 id="izenburua"></h1><span>ZKA: <b id="zkaBurua"></b></span></div></div>
+<div class="txartela"><h2>Irratiaren datuak</h2><div id="datuak" class="datuak"></div></div>
+
+<div id="editPanela" class="txartela" hidden><h2>Irratia editatu</h2><form id="irratiForm"><input id="id" type="hidden"><div class="formgrid">
+<label>ZKA<input id="zka" type="number"></label><label>Alias<input id="alias"></label><label>Marka<input id="marka"></label><label>Modeloa<input id="modelo"></label><label>TEI<input id="tei" type="number"></label><label>Mota<input id="mota"></label></div>
+<div class="checks"><label><input id="gps" type="checkbox"> GPS</label><label><input id="gateway" type="checkbox"> Gateway</label><label><input id="baja_definitiva" type="checkbox"> Behin betiko baja</label><label><input id="sustituido" type="checkbox"> Ordezkatua</label></div>
+<button>Gorde</button><button type="button" id="cancelEdit">Utzi</button></form></div>
+
+<div id="mugimenduEditPanela" class="txartela" hidden><h2 id="mugimenduFormTitle">Mugimendu berria</h2>
+<form id="mugimenduForm"><input id="mugimenduId" type="hidden">
+<div class="formgrid">
+<label>Nork<input id="m_nork"></label><label>Hasiera<input id="m_noiztik" type="date"></label><label>Amaiera<input id="m_noizarte" type="date"></label>
+<label>Arrazoia<input id="m_zergatia"></label><label>Bateria<input id="m_bateria" type="number" step="any"></label><label>Arreta<input id="m_arreta" type="number" step="any"></label>
+<label>Teltronic<input id="m_teltronic"></label>
+</div>
+<div class="checks"><label><input id="m_funda" type="checkbox"> Funda</label><label><input id="m_micro" type="checkbox"> Mikroa</label><label><input id="m_karga" type="checkbox"> Karga</label><label><input id="m_kablea" type="checkbox"> 12V kablea</label></div>
+<button>Gorde</button><button type="button" id="cancelMugimendu">Utzi</button></form></div>
+
+<div class="txartela"><div class="sekzioBurua"><h2>Mugimenduak <small id="mugimenduKop">0 erregistro</small></h2><button id="mugimenduBerria">＋ Mugimendu berria</button></div>
+<table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Funda</th><th>Mikroa</th><th>Karga</th><th></th></tr></thead><tbody id="mugimenduRows"></tbody></table></div>
+<div class="behekoBotoiak"><button id="excelBottom">Excelera esportatu</button><button id="pdfBottom">PDFra esportatu</button><button id="histBottom">Historia osoa ikusi</button></div>
+</section></div></section></main>
+
+<div id="histModal" class="modal" hidden><div class="modalbox"><div class="modalhead"><h2 id="histTitle">Historia</h2><button id="closeHist">×</button></div><div id="histContent"></div></div></div>
+<input id="editatzeko" type="hidden">
+<script type="module" src="app.js"></script></body></html>
