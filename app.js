@@ -15,17 +15,38 @@ function mezua(t,ok=true){ const e=$("#mezua"); e.textContent=t; e.className=ok?
 function fmtDate(v){ return v ? new Date(v+"T00:00:00").toLocaleDateString("eu-ES") : ""; }
 function today(){ return new Date().toISOString().slice(0,10); }
 
+function closeHistory(){
+  $("#histModal").hidden=true;
+}
+function setNavEnabled(enabled){
+  ["navMov","navHist","navExp","logout"].forEach(id=>{
+    const el=$("#"+id);
+    if(el) el.disabled=!enabled;
+  });
+}
 async function saioa(){
   const {data:{session}}=await supabase.auth.getSession();
-  if(!session){ $("#app").hidden=true; $("#login").hidden=false; return; }
-  $("#login").hidden=true; $("#app").hidden=false; kargatuIrratiak();
+  if(!session){
+    $("#app").hidden=true;
+    $("#login").hidden=false;
+    currentRadio=null;
+    currentRadioData=null;
+    closeHistory();
+    setNavEnabled(false);
+    return;
+  }
+  $("#login").hidden=true;
+  $("#app").hidden=false;
+  setNavEnabled(true);
+  closeHistory();
+  kargatuIrratiak();
 }
 $("#loginForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const {error}=await supabase.auth.signInWithPassword({email:$("#email").value.trim(),password:$("#password").value});
   if(error) mezua(error.message,false); else saioa();
 });
-$("#logout").onclick=async()=>{await supabase.auth.signOut();saioa();};
+$("#logout").onclick=async()=>{closeHistory(); await supabase.auth.signOut(); await saioa();};
 
 async function kargatuIrratiak(){
   const q=$("#bilaketa").value.trim();
@@ -152,7 +173,7 @@ $("#mugimenduForm").addEventListener("submit",async e=>{
 });
 
 function openHistory(){
-  if(!currentRadioData)return;
+  if(!currentRadio || !currentRadioData){ closeHistory(); mezua("Lehenengo hautatu irrati bat.",false); return; }
   $("#histTitle").textContent=`Historia — ${currentRadioData.alias||currentRadioData.zka||""}`;
   $("#histContent").innerHTML=currentMovements.length ? `
     <p>${currentMovements.length} erregistro historiko.</p>
@@ -161,9 +182,11 @@ function openHistory(){
     `<p class="hutsunea">Ez dago mugimendurik.</p>`;
   $("#histModal").hidden=false;
 }
-$("#historiala").onclick=openHistory; $("#histBottom").onclick=openHistory;
-$("#closeHist").onclick=()=>$("#histModal").hidden=true;
-$("#histModal").addEventListener("click",e=>{if(e.target.id==="histModal")$("#histModal").hidden=true;});
+$("#historiala").onclick=openHistory;
+$("#histBottom").onclick=openHistory;
+$("#closeHist").addEventListener("click",closeHistory);
+$("#histModal").addEventListener("click",e=>{if(e.target.id==="histModal")closeHistory();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHistory();});
 
 async function loadSheetJS(){
   if(window.XLSX)return window.XLSX;
@@ -211,7 +234,7 @@ function exportPDF(){
 $("#pdf").onclick=exportPDF; $("#pdfBottom").onclick=exportPDF;
 
 $("#navMov").onclick=()=>{ if(currentRadio) document.querySelector(".txartela:last-of-type")?.scrollIntoView({behavior:"smooth"}); };
-$("#navHist").onclick=openHistory;
+$("#navHist").onclick=()=>{ if(currentRadio&&currentRadioData) openHistory(); else mezua("Lehenengo hautatu irrati bat.",false); };
 $("#navExp").onclick=()=>currentRadio?exportExcel():mezua("Lehenengo hautatu irrati bat.",false);
 
 saioa();
