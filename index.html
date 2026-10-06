@@ -45,7 +45,7 @@
     </div>
 
     <div class="mainGrid">
-      <section class="radioList card">
+      <section id="radioList" class="radioList card">
         <div class="sectionTitle"><h2>Irratiak <span id="irratiaKop">(0)</span></h2></div>
         <div class="tableScroll">
           <table class="radioTable">
@@ -53,6 +53,7 @@
             <tbody id="irratiaRows"></tbody>
           </table>
         </div>
+        <div id="radioPagination" class="pagination" aria-label="Irratien orriak"></div>
       </section>
 
       <aside id="detailCard" class="detailCard card" hidden>
@@ -75,7 +76,7 @@
       <div class="movementHead"><h2>◷&nbsp; Mugimenduak <span id="movementTitle"></span></h2><span id="mugimenduKop"></span></div>
       <div class="tableScroll">
         <table class="movementTable">
-          <thead><tr><th>Data</th><th>Mugimendua</th><th>Kokapen aurrekoa</th><th>Kokapen berria</th><th>Arreta Zb.</th><th>RMA</th><th>Erabiltzailea</th><th>Oharrak</th><th></th></tr></thead>
+          <thead><tr><th>Data</th><th>Mugimendua</th><th>Nork</th><th>Arreta Zb.</th><th>RMA</th><th>Oharrak</th><th></th></tr></thead>
           <tbody id="mugimenduRows"></tbody>
         </table>
       </div>
