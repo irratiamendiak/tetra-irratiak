@@ -67,15 +67,16 @@ async function kargatuIrratiak(){
   $("#irratiaRows").innerHTML=data.map(r=>{
     const m=azkenMugimendua.get(r.id)||{};
     return `
-    <tr>
-      <td>${esc(r.zka??"")}</td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
+    <tr class="radio-row" data-radio-row="${r.id}">
+      <td><button class="esteka zka-link" data-id="${r.id}">${esc(r.zka??"")}</button></td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
       <td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td>
       <td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td>
       <td><span class="egoera ${r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo"}">${r.baja_definitiva?"Behin betiko baja":r.sustituido?"Ordezkatua":"Aktibo"}</span></td>
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
     </tr>`;
   }).join("");
-  document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>irekiIrratia(Number(b.dataset.id)));
+  document.querySelectorAll("[data-id]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); irekiIrratia(Number(b.dataset.id)); });
+  document.querySelectorAll(".radio-row").forEach(row=>row.onclick=()=>irekiIrratia(Number(row.dataset.radioRow)));
 }
 $("#bilaketa").addEventListener("input",kargatuIrratiak);
 $("#irratiBerria").onclick=()=>irekiIrratia(null);

@@ -16,9 +16,9 @@ nav button{background:transparent;color:#fff;border:1px solid transparent;paddin
 nav button:hover{background:rgba(255,255,255,.10);box-shadow:none}
 .navAktibo{background:#2379c8!important;border-color:#328ad7!important;box-shadow:0 6px 16px rgba(0,0,0,.12)!important}
 header>#logout{background:transparent;color:#fff;border-color:rgba(255,255,255,.18);padding:10px 16px}
-main{padding:24px 28px 44px;max-width:1680px;margin:0 auto}
-.layout{display:block;max-width:none;margin:auto}
-.zerrenda,.xehetasuna{background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px rgba(20,45,70,.07);padding:20px}
+main{padding:24px 24px 44px;width:100%;max-width:none;margin:0 auto}
+.layout{display:block;width:100%;max-width:none;margin:0 auto}
+.zerrenda,.xehetasuna{width:100%;background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px rgba(20,45,70,.07);padding:20px}
 .tit{display:flex;align-items:center;justify-content:space-between;gap:15px}
 .tit h1,.izenburua h1{margin:0 0 3px;font-size:25px;letter-spacing:-.3px}
 .tit span{color:var(--muted)}
@@ -33,7 +33,7 @@ th:first-child{border-left:1px solid #e4ebf2;border-top-left-radius:8px}
 th:last-child{border-right:1px solid #e4ebf2;border-top-right-radius:8px}
 tbody tr:hover{background:#f7fbff}
 tbody tr:last-child td{border-bottom:1px solid #e4ebf2}
-.zerrenda table{min-width:960px}
+.zerrenda table{min-width:0;width:100%}
 .esteka{border:0;background:transparent;padding:0;text-decoration:none;color:#1d4f7e;font-weight:650}
 .esteka:hover{color:var(--blue);box-shadow:none;transform:none;text-decoration:underline}
 .txiki{padding:6px 9px;font-size:12px}
@@ -59,7 +59,7 @@ tbody tr:last-child td{border-bottom:1px solid #e4ebf2}
 .formgrid label{display:flex;flex-direction:column;gap:5px;color:#475569;font-weight:600;font-size:13px}
 .checks{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.checks input{width:auto}
 .sekzioBurua{display:flex;align-items:center;justify-content:space-between;gap:12px}.sekzioBurua h2{margin:0}.sekzioBurua small{font-weight:normal;color:var(--muted);font-size:13px;margin-left:6px}
-.txartela table{min-width:980px}
+.txartela table{min-width:0;width:100%}
 .hutsunea{text-align:center;padding:48px;color:var(--muted)}.hutsunea span{font-size:13px}
 .behekoBotoiak{display:flex;gap:10px;margin-top:14px}.behekoBotoiak button{flex:1}
 .mezua{min-height:20px}.ondo{color:#087443}.errorea{color:#a11}
@@ -71,3 +71,5 @@ tbody tr:last-child td{border-bottom:1px solid #e4ebf2}
 #histContent{padding:22px}.historytable{overflow:auto}.historytable table{min-width:1000px}
 @media(max-width:1000px){header{height:auto;min-height:92px;flex-wrap:wrap;padding:12px 20px}.brand{min-width:300px}.layout{display:block}.formgrid{grid-template-columns:1fr 1fr}nav{order:3;width:100%;overflow:auto}.irratiDatuTxartela{grid-template-columns:140px 1fr}.irratiIrudia img{width:100px}}
 @media(max-width:650px){main{padding:14px}.brand{min-width:unset}.brandTalkie{width:42px;height:64px}.brand b{font-size:23px}.brand span{font-size:12px}.datuak{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.irratiDatuTxartela{grid-template-columns:1fr}.irratiIrudia{min-height:190px}.irratiIrudia img{height:185px}table{font-size:12px}}
+
+.radio-row{cursor:pointer}.radio-row:hover{background:#eef7ff}.radio-row td:first-child{font-weight:650}.zka-link{font-weight:650!important}.brandTalkie{object-fit:contain}.brand{min-width:420px}
