@@ -75,8 +75,14 @@ async function kargatuIrratiak(){
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
     </tr>`;
   }).join("");
-  document.querySelectorAll("[data-id]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); irekiIrratia(Number(b.dataset.id)); });
-  document.querySelectorAll(".radio-row").forEach(row=>row.onclick=()=>irekiIrratia(Number(row.dataset.radioRow)));
+  // Un único manejador sobre la tabla: ZKA, alias, botón "Ikusi" o cualquier celda de la fila abren la radio.
+  const rows = $("#irratiaRows");
+  rows.onclick = (e) => {
+    const row = e.target.closest("tr.radio-row");
+    if (!row || !rows.contains(row)) return;
+    const id = Number(row.dataset.radioRow);
+    if (Number.isFinite(id)) irekiIrratia(id);
+  };
 }
 $("#bilaketa").addEventListener("input",kargatuIrratiak);
 $("#irratiBerria").onclick=()=>irekiIrratia(null);

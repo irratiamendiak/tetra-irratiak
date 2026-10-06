@@ -73,3 +73,9 @@ tbody tr:last-child td{border-bottom:1px solid #e4ebf2}
 @media(max-width:650px){main{padding:14px}.brand{min-width:unset}.brandTalkie{width:42px;height:64px}.brand b{font-size:23px}.brand span{font-size:12px}.datuak{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.irratiDatuTxartela{grid-template-columns:1fr}.irratiIrudia{min-height:190px}.irratiIrudia img{height:185px}table{font-size:12px}}
 
 .radio-row{cursor:pointer}.radio-row:hover{background:#eef7ff}.radio-row td:first-child{font-weight:650}.zka-link{font-weight:650!important}.brandTalkie{object-fit:contain}.brand{min-width:420px}
+/* v6.5: selección de radios */
+.radio-row td { cursor: pointer; }
+.radio-row .esteka, .radio-row .txiki { pointer-events: none; }
+.radio-row:hover { background: #eaf5ff !important; }
+.irratiXehetasuna { scroll-margin-top: 90px; }
+.brandTalkie { width: 54px; height: 78px; object-fit: contain; }
