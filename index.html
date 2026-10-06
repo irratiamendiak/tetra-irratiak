@@ -7,77 +7,97 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
+<header class="topbar">
   <div class="brand">
-    <img class="brandTalkie" src="data/talkie.png" alt="Talkie TETRA">
-    <div><b>Tetra Irratiak</b><span>Irrati eta mugimenduen kudeaketa</span></div>
+    <img class="brandTalkie" src="data/talkie.png" alt="TETRA talkie">
+    <div class="brandText"><h1>TETRA IRRATIAK</h1><p>Irrati eta mugimenduen kudeaketa</p></div>
   </div>
-  <nav>
-    <button class="navAktibo">Irratiak</button>
-    <button id="navMov">Mugimenduak</button>
-    <button id="navHist">Historia</button>
-    <button id="navExp">Esportatu</button>
+  <nav class="mainnav">
+    <button class="navBtn active" id="navRadios">▣ <span>Irratiak</span></button>
+    <button class="navBtn" id="navMov">☷ <span>Mugimenduak</span></button>
+    <button class="navBtn" id="navHist">◷ <span>Historia</span></button>
+    <button class="navBtn" id="navExp">⇩ <span>Esportatu</span></button>
   </nav>
-  <button id="logout">⇥&nbsp; Irten</button>
+  <button id="logout" class="logout">♙&nbsp; Irten</button>
 </header>
+
 <main>
-<section id="login">
-  <h2>Sarbidea</h2>
-  <form id="loginForm"><input id="email" type="email" placeholder="Posta elektronikoa" required><input id="password" type="password" placeholder="Pasahitza" required><button>Sartu</button></form>
-  <p id="mezua"></p>
-</section>
-<section id="app" hidden>
-  <div class="appShell">
-    <aside class="sidebar">
-      <div class="sideTitle"><span class="radioIcon">▣</span><span>Irratiak</span></div>
-      <div class="sideSearch"><input id="bilaketa" placeholder="Bilatu irratia..." autocomplete="off"></div>
-      <select class="filter" id="egoeraFilter"><option value="">Egoera guztiak</option><option value="aktibo">Aktiboak</option><option value="ordezkatua">Ordezkatuak</option><option value="baja">Behin betiko baja</option></select>
-      <select class="filter" id="motaFilter"><option value="">Mota guztiak</option></select>
-      <select class="filter" id="markaFilter"><option value="">Marka guztiak</option></select>
-      <button id="irratiBerria" class="newRadio">＋&nbsp; Irrati berria</button>
-    </aside>
-    <div class="content">
-      <section class="panel radioTablePanel">
-        <div class="panelHead"><div><h1>Irrati TETRA</h1><span id="irratiaKop">0 irrati</span></div></div>
-        <div class="tableWrap">
-          <table class="radioTable"><thead><tr><th>Izen</th><th>TEI</th><th>Arreta Zb.</th><th>RMA</th><th>Saila</th><th>Egoera</th><th></th></tr></thead><tbody id="irratiaRows"></tbody></table>
-        </div>
-      </section>
-
-      <section id="irratiXehetasuna" class="panel detail" hidden>
-        <div class="detailTop">
-          <div class="detailTitle"><h2 id="izenburua"></h2><span id="statusBurua" class="status active">Aktiboa</span></div>
-          <div class="detailActions"><button id="itxiIrratia" class="btn">←&nbsp; Zerrendara</button><button id="editIrratia" class="btn btnPrimary">✎&nbsp; Editatu</button><button id="mugimenduBerria" class="btn">⇄&nbsp; Mugimendu berria</button><button id="historiala" class="btn">☷&nbsp; Mugimenduak</button></div>
-        </div>
-        <div class="detailBody">
-          <div><div class="radioInfo" id="datuak"></div></div>
-          <div class="radioPhoto"><img src="data/talkie.png" alt="Talkie TETRA"></div>
-        </div>
-
-        <div id="editPanela" class="formPanel" hidden>
-          <h3>Irratia editatu</h3>
-          <form id="irratiForm"><input id="id" type="hidden"><div class="formgrid">
-            <label>ZKA<input id="zka" type="number"></label><label>Alias<input id="alias"></label><label>Marka<input id="marka"></label><label>Modeloa<input id="modelo"></label><label>TEI<input id="tei" type="number"></label><label>Mota<input id="mota"></label>
-          </div><div class="checks"><label><input id="gps" type="checkbox"> GPS</label><label><input id="gateway" type="checkbox"> Gateway</label><label><input id="baja_definitiva" type="checkbox"> Behin betiko baja</label><label><input id="sustituido" type="checkbox"> Ordezkatua</label></div><div class="formButtons"><button class="btn btnPrimary">Gorde</button><button type="button" id="cancelEdit" class="btn">Utzi</button></div></form>
-        </div>
-
-        <div id="mugimenduEditPanela" class="formPanel" hidden>
-          <h3 id="mugimenduFormTitle">Mugimendu berria</h3>
-          <form id="mugimenduForm"><input id="mugimenduId" type="hidden"><div class="formgrid">
-            <label>Nork<input id="m_nork"></label><label>Hasiera<input id="m_noiztik" type="date"></label><label>Amaiera<input id="m_noizarte" type="date"></label><label>Arrazoia<input id="m_zergatia"></label><label>Bateria<input id="m_bateria" type="number" step="any"></label><label>Arreta Zb.<input id="m_arreta" type="number" step="any"></label><label>RMA<input id="m_teltronic"></label>
-          </div><div class="checks"><label><input id="m_funda" type="checkbox"> Funda</label><label><input id="m_micro" type="checkbox"> Mikroa</label><label><input id="m_karga" type="checkbox"> Karga</label><label><input id="m_kablea" type="checkbox"> 12V kablea</label></div><div class="formButtons"><button class="btn btnPrimary">Gorde</button><button type="button" id="cancelMugimendu" class="btn">Utzi</button></div></form>
-        </div>
-
-        <div class="movPanel" id="movSection">
-          <div class="movHead"><h3>Mugimenduak <small id="mugimenduKop">0 erregistro</small></h3><div class="movementTools"><button id="excel" class="btn">▣&nbsp; Excel</button><button id="pdf" class="btn">▤&nbsp; PDF</button></div></div>
-          <div class="tableWrap"><table class="movTable"><thead><tr><th>Data</th><th>Mugimendua</th><th>Kokapena</th><th>Arreta Zb.</th><th>RMA</th><th>Erabiltzailea</th><th>Oharrak</th><th></th></tr></thead><tbody id="mugimenduRows"></tbody></table></div>
-        </div>
-        <div class="bottomTools"><button id="excelBottom" class="btn">Excelera esportatu</button><button id="pdfBottom" class="btn">PDFra esportatu</button><button id="histBottom" class="btn">Historia osoa ikusi</button></div>
-      </section>
+  <section id="login" hidden>
+    <div class="loginCard">
+      <h2>Sarbidea</h2>
+      <p>Sartu TETRA irratiak kudeatzeko.</p>
+      <form id="loginForm">
+        <input id="email" type="email" placeholder="Posta elektronikoa" required>
+        <input id="password" type="password" placeholder="Pasahitza" required>
+        <button>Sartu</button>
+      </form>
+      <div id="mezua"></div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section id="app" hidden>
+    <div class="toolbar">
+      <div class="searchBox"><span>⌕</span><input id="bilaketa" placeholder="Bilatu... (ZKA, alias, marka, modeloa, serie zenbakia...)" autocomplete="off"></div>
+      <select id="egoeraFilter"><option value="">Egoera: Guztiak</option><option value="aktibo">Egoera: Aktiboak</option><option value="ordezkatua">Egoera: Ordezkatuak</option><option value="baja">Egoera: Behin betiko baja</option></select>
+      <select id="motaFilter"><option value="">Saila: Guztiak</option></select>
+      <select id="kokapenaFilter"><option value="">Kokapena: Guztiak</option></select>
+      <button id="irratiBerria" class="primaryBtn">＋&nbsp; Irrati berria</button>
+    </div>
+
+    <div class="mainGrid">
+      <section class="radioList card">
+        <div class="sectionTitle"><h2>Irratiak <span id="irratiaKop">(0)</span></h2></div>
+        <div class="tableScroll">
+          <table class="radioTable">
+            <thead><tr><th>Kodea</th><th>Marka</th><th>Modeloa</th><th>Serie Zenb.</th><th>Arreta Zb.</th><th>RMA</th><th>Saila</th><th>Egoera</th><th>Kokapena</th></tr></thead>
+            <tbody id="irratiaRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside id="detailCard" class="detailCard card" hidden>
+        <div class="detailHead">
+          <div><h2 id="izenburua">—</h2><span id="statusBurua" class="status active">Aktibo</span></div>
+        </div>
+        <div class="detailMain">
+          <div class="detailPhoto"><img id="radioPhoto" src="data/talkie.png" alt="Talkie"></div>
+          <div id="datuak" class="meta"></div>
+        </div>
+        <div class="detailActions">
+          <button id="editIrratia" class="actionBtn primary">✎&nbsp; Editatu</button>
+          <button id="historiala" class="actionBtn">◷&nbsp; Historia</button>
+          <button id="mugimenduBerria" class="actionBtn">＋&nbsp; Mugimendu berria</button>
+        </div>
+      </aside>
+    </div>
+
+    <section id="movementSection" class="movementCard card" hidden>
+      <div class="movementHead"><h2>◷&nbsp; Mugimenduak <span id="movementTitle"></span></h2><span id="mugimenduKop"></span></div>
+      <div class="tableScroll">
+        <table class="movementTable">
+          <thead><tr><th>Data</th><th>Mugimendua</th><th>Kokapen aurrekoa</th><th>Kokapen berria</th><th>Arreta Zb.</th><th>RMA</th><th>Erabiltzailea</th><th>Oharrak</th><th></th></tr></thead>
+          <tbody id="mugimenduRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="editPanela" class="formCard card" hidden>
+      <h3>Irratia editatu</h3>
+      <form id="irratiForm">
+        <input id="id" type="hidden">
+        <div class="formgrid"><label>ZKA<input id="zka" type="number"></label><label>Alias<input id="alias"></label><label>Marka<input id="marka"></label><label>Modeloa<input id="modelo"></label><label>TEI<input id="tei" type="number"></label><label>Saila<input id="mota"></label></div>
+        <div class="checks"><label><input id="gps" type="checkbox"> GPS</label><label><input id="gateway" type="checkbox"> Gateway</label><label><input id="baja_definitiva" type="checkbox"> Behin betiko baja</label><label><input id="sustituido" type="checkbox"> Ordezkatua</label></div>
+        <div class="formButtons"><button class="primaryBtn">Gorde</button><button type="button" id="cancelEdit" class="actionBtn">Utzi</button></div>
+      </form>
+    </section>
+
+    <section id="mugimenduEditPanela" class="formCard card" hidden>
+      <h3 id="mugimenduFormTitle">Mugimendu berria</h3>
+      <form id="mugimenduForm"><input id="mugimenduId" type="hidden"><div class="formgrid"><label>Nork<input id="m_nork"></label><label>Hasiera<input id="m_noiztik" type="date"></label><label>Amaiera<input id="m_noizarte" type="date"></label><label>Arrazoia<input id="m_zergatia"></label><label>Bateria<input id="m_bateria" type="number" step="any"></label><label>Arreta Zb.<input id="m_arreta" type="number" step="any"></label><label>RMA<input id="m_teltronic"></label></div><div class="checks"><label><input id="m_funda" type="checkbox"> Funda</label><label><input id="m_micro" type="checkbox"> Mikroa</label><label><input id="m_karga" type="checkbox"> Karga</label><label><input id="m_kablea" type="checkbox"> 12V kablea</label></div><div class="formButtons"><button class="primaryBtn">Gorde</button><button type="button" id="cancelMugimendu" class="actionBtn">Utzi</button></div></form>
+    </section>
+  </section>
 </main>
+
 <div id="histModal" class="modal" hidden><div class="modalbox"><div class="modalhead"><h2 id="histTitle">Historia</h2><button id="closeHist">×</button></div><div id="histContent" class="modalContent"></div></div></div>
 <input id="editatzeko" type="hidden">
 <script type="module" src="app.js"></script>
