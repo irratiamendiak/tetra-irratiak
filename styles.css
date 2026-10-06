@@ -1,9 +1,73 @@
-*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f4f7fb;color:#14243a}header{height:84px;background:#174b78;color:white;display:flex;align-items:center;padding:0 28px;gap:30px}.brand{display:flex;flex-direction:column;min-width:320px}.brand b{font-size:28px}.brand span{font-size:14px;opacity:.9}nav{display:flex;gap:8px;flex:1}nav button{background:transparent;color:white;border:0;padding:13px 18px;border-radius:7px;font-size:15px}.navAktibo{background:#2b6da5!important}header>#logout{background:transparent;color:white;border:0}main{padding:18px}.layout{display:grid;grid-template-columns:minmax(500px,48%) 1fr;gap:16px;max-width:1500px;margin:auto}.zerrenda,.xehetasuna{background:white;border:1px solid #e1e8f0;border-radius:10px;box-shadow:0 3px 12px #16324b12;padding:18px}.tit,.botoiak,.sekzioBurua,.behekoBotoiak{display:flex;align-items:center;gap:10px}.tit{justify-content:space-between}.tit h1,.izenburua h1{margin:0 0 3px;font-size:24px}.tit span{color:#64748b}.bilaketa{margin:18px 0}.bilaketa input,#login input,input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:6px}button{border:1px solid #cbd5e1;background:white;border-radius:6px;padding:9px 13px;cursor:pointer;color:#17324f}.tit button,.nagusia{background:#1475d1;color:white;border-color:#1475d1}table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1px solid #edf1f5;text-align:left;font-size:14px}th{background:#f8fafc;color:#334155}.esteka{border:0;background:transparent;padding:0;text-decoration:underline}.txiki{padding:5px 8px;font-size:12px}.egoera{padding:5px 9px;border-radius:12px;font-size:12px}.aktibo{background:#d9f7e8;color:#087443}.baja{background:#fee2e2;color:#a11}.ordezkatua{background:#fff0c2;color:#8a5a00}.xehetasuna{min-width:0}.botoiak{justify-content:flex-start;flex-wrap:wrap}.izenburua{margin:18px 0;padding:18px;border:1px solid #e4eaf0;border-radius:9px}.txartela{border:1px solid #e4eaf0;border-radius:9px;margin-top:14px;padding:16px}.txartela h2{margin:0 0 14px;font-size:19px}.datuak{display:grid;grid-template-columns:1fr 1fr;gap:12px 30px}.datuak div{display:flex;justify-content:space-between;border-bottom:1px dashed #e3e8ee;padding-bottom:7px}.datuak span{color:#64748b}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.formgrid label{display:flex;flex-direction:column;gap:4px}.checks{display:flex;gap:16px;flex-wrap:wrap;margin:15px 0}.checks input{width:auto}.sekzioBurua{justify-content:space-between}.sekzioBurua small{font-weight:normal;color:#64748b}.hutsunea{text-align:center;padding:48px;color:#64748b}.hutsunea span{font-size:13px}.behekoBotoiak{margin-top:14px}.behekoBotoiak button{flex:1}.mezua{min-height:20px}.ondo{color:#087443}.errorea{color:#a11}#login{max-width:400px;background:white;padding:25px;margin:50px auto;border-radius:10px}#login form{display:grid;gap:10px}@media(max-width:1000px){.layout{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}}@media(max-width:650px){header{height:auto;padding:15px;flex-wrap:wrap}.brand{min-width:unset}nav{order:3;width:100%;overflow:auto}.datuak{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}table{font-size:12px}}
-
-.modal[hidden]{display:none!important}.modal{position:fixed;inset:0;background:rgba(15,29,50,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:20}
-.modalbox{background:#fff;border-radius:18px;max-width:1200px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
-.modalhead{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e5eaf0;position:sticky;top:0;background:#fff;z-index:2}
-.modalhead button{font-size:24px;border:0;background:transparent;cursor:pointer}
-#histContent{padding:22px}.historytable{overflow:auto}.historytable table{min-width:900px}
-.brand{flex-direction:row;align-items:center;gap:12px;min-width:320px}.brandTalkie{width:42px;height:62px;object-fit:cover;object-position:center top;border-radius:5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}.brand b{font-size:28px;display:block}.brand span{display:block}.zerrenda{overflow:auto}.zerrenda table{min-width:920px}.txartela table{min-width:900px}
-@media(max-width:650px){.brandTalkie{width:34px;height:52px}.brand b{font-size:23px}.brand{min-width:unset}}
+*{box-sizing:border-box}
+:root{--navy:#123f67;--navy2:#0e3557;--blue:#1976d2;--blue2:#2d8be5;--bg:#f3f6fa;--line:#dfe7ef;--text:#14253b;--muted:#64748b;--white:#fff}
+html{scroll-behavior:smooth}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--text);font-size:15px}
+button,input{font:inherit}
+button{border:1px solid #cbd6e2;background:#fff;color:#18324d;border-radius:9px;padding:10px 14px;cursor:pointer;transition:.15s ease}
+button:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(18,63,103,.10)}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+header{height:92px;background:linear-gradient(100deg,var(--navy2),var(--navy));color:#fff;display:flex;align-items:center;padding:0 30px;gap:30px;box-shadow:0 2px 12px rgba(11,38,62,.20);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:14px;min-width:385px;height:100%;position:relative}
+.brandTalkie{width:58px;height:84px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));align-self:flex-end;margin-bottom:-3px}
+.brand b{font-size:30px;line-height:1.05;letter-spacing:.1px;display:block}
+.brand span{display:block;font-size:14px;opacity:.88;margin-top:5px}
+nav{display:flex;gap:7px;align-items:center;flex:1}
+nav button{background:transparent;color:#fff;border:1px solid transparent;padding:12px 18px;border-radius:9px;font-size:15px}
+nav button:hover{background:rgba(255,255,255,.10);box-shadow:none}
+.navAktibo{background:#2379c8!important;border-color:#328ad7!important;box-shadow:0 6px 16px rgba(0,0,0,.12)!important}
+header>#logout{background:transparent;color:#fff;border-color:rgba(255,255,255,.18);padding:10px 16px}
+main{padding:24px 28px 44px;max-width:1680px;margin:0 auto}
+.layout{display:block;max-width:none;margin:auto}
+.zerrenda,.xehetasuna{background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px rgba(20,45,70,.07);padding:20px}
+.tit{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.tit h1,.izenburua h1{margin:0 0 3px;font-size:25px;letter-spacing:-.3px}
+.tit span{color:var(--muted)}
+.tit button,.nagusia{background:var(--blue);color:#fff;border-color:var(--blue)}
+.bilaketa{margin:18px 0 14px}
+.bilaketa input,#login input,input{width:100%;padding:11px 13px;border:1px solid #cbd6e2;border-radius:8px;background:#fff;color:var(--text);outline:none}
+input:focus{border-color:#5aa5e8;box-shadow:0 0 0 3px rgba(25,118,210,.10)}
+table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
+th,td{padding:12px 10px;border-bottom:1px solid #e9eef3;text-align:left;font-size:14px;white-space:nowrap}
+th{background:#f5f8fb;color:#26384d;font-weight:700;border-top:1px solid #e4ebf2}
+th:first-child{border-left:1px solid #e4ebf2;border-top-left-radius:8px}
+th:last-child{border-right:1px solid #e4ebf2;border-top-right-radius:8px}
+tbody tr:hover{background:#f7fbff}
+tbody tr:last-child td{border-bottom:1px solid #e4ebf2}
+.zerrenda table{min-width:960px}
+.esteka{border:0;background:transparent;padding:0;text-decoration:none;color:#1d4f7e;font-weight:650}
+.esteka:hover{color:var(--blue);box-shadow:none;transform:none;text-decoration:underline}
+.txiki{padding:6px 9px;font-size:12px}
+.egoera{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.egoera:before{content:"✓";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;margin-right:5px;background:rgba(255,255,255,.55)}
+.aktibo{background:#d7f4e2;color:#087443}.baja{background:#fee1e1;color:#a11}.ordezkatua{background:#fff0bf;color:#8a5a00}
+.xehetasuna{margin-top:18px;min-width:0}
+.botoiak{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.botoiak button{background:#fff}
+.botoiak .nagusia{background:var(--blue);color:#fff}
+.izenburua{display:flex;justify-content:space-between;align-items:center;margin:18px 0;padding:20px 22px;border:1px solid #e4ebf2;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfdff)}
+.txartela{border:1px solid #e4ebf2;border-radius:12px;margin-top:16px;padding:18px;background:#fff}
+.txartela h2{margin:0 0 15px;font-size:19px}
+.irratiDatuTxartela{display:grid;grid-template-columns:180px 1fr;gap:24px;align-items:stretch}
+.irratiIrudia{display:flex;align-items:center;justify-content:center;min-height:230px;background:linear-gradient(180deg,#f7fafc,#fff);border-radius:12px;border:1px solid #edf1f5}
+.irratiIrudia img{width:125px;height:230px;object-fit:contain;filter:drop-shadow(0 5px 7px rgba(0,0,0,.20))}
+.irratiDatuEremua{min-width:0}
+.datuak{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.datuak div{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed #e0e7ee;padding:11px 4px}
+.datuak span{color:var(--muted)}
+.datuak strong{font-weight:700;color:#1d2e44}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.formgrid label{display:flex;flex-direction:column;gap:5px;color:#475569;font-weight:600;font-size:13px}
+.checks{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.checks input{width:auto}
+.sekzioBurua{display:flex;align-items:center;justify-content:space-between;gap:12px}.sekzioBurua h2{margin:0}.sekzioBurua small{font-weight:normal;color:var(--muted);font-size:13px;margin-left:6px}
+.txartela table{min-width:980px}
+.hutsunea{text-align:center;padding:48px;color:var(--muted)}.hutsunea span{font-size:13px}
+.behekoBotoiak{display:flex;gap:10px;margin-top:14px}.behekoBotoiak button{flex:1}
+.mezua{min-height:20px}.ondo{color:#087443}.errorea{color:#a11}
+#login{max-width:420px;background:#fff;padding:28px;margin:70px auto;border-radius:14px;border:1px solid var(--line);box-shadow:0 8px 28px rgba(20,45,70,.08)}
+#login h2{margin-top:0}#login form{display:grid;gap:11px}#login button{background:var(--blue);color:#fff;border-color:var(--blue)}
+.modal[hidden]{display:none!important}.modal{position:fixed;inset:0;background:rgba(15,29,50,.58);display:flex;align-items:center;justify-content:center;padding:24px;z-index:20}
+.modalbox{background:#fff;border-radius:18px;max-width:1250px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.modalhead{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e5eaf0;position:sticky;top:0;background:#fff;z-index:2}.modalhead button{font-size:26px;border:0;background:transparent;cursor:pointer;box-shadow:none}.modalhead button:hover{transform:none}
+#histContent{padding:22px}.historytable{overflow:auto}.historytable table{min-width:1000px}
+@media(max-width:1000px){header{height:auto;min-height:92px;flex-wrap:wrap;padding:12px 20px}.brand{min-width:300px}.layout{display:block}.formgrid{grid-template-columns:1fr 1fr}nav{order:3;width:100%;overflow:auto}.irratiDatuTxartela{grid-template-columns:140px 1fr}.irratiIrudia img{width:100px}}
+@media(max-width:650px){main{padding:14px}.brand{min-width:unset}.brandTalkie{width:42px;height:64px}.brand b{font-size:23px}.brand span{font-size:12px}.datuak{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.irratiDatuTxartela{grid-template-columns:1fr}.irratiIrudia{min-height:190px}.irratiIrudia img{height:185px}table{font-size:12px}}
