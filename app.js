@@ -75,29 +75,32 @@ async function kargatuIrratiak(){
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
     </tr>`;
   }).join("");
-  // Selección robusta: cada fila y sus botones tienen su propio manejador.
-  // Así funciona tanto en la lista completa como cuando se usa el buscador.
+  // Clic robusto en la lista completa: la fila entera es seleccionable.
+  // El listener se instala en document con captura para que siga funcionando
+  // aunque otro elemento intercepte el evento.
   const rows = $("#irratiaRows");
   rows.querySelectorAll("tr.radio-row").forEach(row => {
-    const id = Number(row.dataset.radioRow);
-    const abrir = (e) => {
-      if (e) e.preventDefault();
-      if (Number.isFinite(id)) irekiIrratia(id);
-    };
-    row.addEventListener("click", abrir);
-    row.querySelectorAll("button").forEach(btn => btn.addEventListener("click", abrir));
+    row.style.cursor = "pointer";
   });
-  // Respaldo por delegación para cualquier fila que se vuelva a insertar.
-  rows.onclick = (e) => {
-    const row = e.target.closest("tr.radio-row");
-    if (!row || !rows.contains(row)) return;
-    const id = Number(row.dataset.radioRow);
-    if (Number.isFinite(id)) irekiIrratia(id);
-  };
 }
 $("#bilaketa").addEventListener("input",kargatuIrratiak);
 $("#irratiBerria").onclick=()=>irekiIrratia(null);
 $("#itxiIrratia").onclick=()=>itxiIrratia();
+
+// Un único listener global para las filas de la lista.
+// Esto evita los problemas de eventos al regenerar la tabla.
+if (!window.__tetraRowClickInstalled) {
+  window.__tetraRowClickInstalled = true;
+  document.addEventListener("click", (e) => {
+    const row = e.target.closest("#irratiaRows tr.radio-row");
+    if (!row) return;
+    const id = Number(row.dataset.radioRow);
+    if (!Number.isFinite(id)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    irekiIrratia(id);
+  }, true);
+}
 
 async function irekiIrratia(id){
   currentRadio=id;
