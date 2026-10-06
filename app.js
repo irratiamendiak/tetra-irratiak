@@ -1,256 +1,74 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const SUPABASE_URL="https://hsbreiibrllvbpbwfcoa.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_CFBQFi5SCMTLBSCvAWh7yw_pz0E1Kb3";
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=s=>document.querySelector(s);
+let radios=[],latestMap=new Map(),currentRadio=null,currentRadioData=null,currentMovements=[],editingMovement=null;
+const MOTOROLA_IMG="https://danimex.com/Files/Images/Products/Motorola/Tetra/mtp3550.jpg";
+// HTT-500 photo is a real product photo hosted by a third party; replaceable later with a local copy.
+const TELTRONIC_IMG="https://picclick.co.uk/TELTRONIC-HTT-500-TETRA-TERMINALS-410-470MHZ-x-3-D378Y21N1-282753341093.html";
+function esc(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#039;"}[c]));}
+function toast(t,ok=true){const e=$("#toast");e.textContent=t;e.className="toast on"+(ok?"":" error");clearTimeout(window._tt);window._tt=setTimeout(()=>e.className="toast",3200)}
+function fmtDate(v){return v?new Date(v+"T00:00:00").toLocaleDateString("eu-ES"):""}
+function today(){return new Date().toISOString().slice(0,10)}
+function statusOf(r){return r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo"}
+function statusText(r){return r.baja_definitiva?"Baja":r.sustituido?"Ordezkatua":"Aktibo"}
+function modelImage(r){const m=(r.marka||"").toLowerCase(),o=(r.modelo||"").toLowerCase();if(o.includes("mtp3550")||m.includes("motorola"))return {src:MOTOROLA_IMG,alt:"Motorola MTP3550"};if(o.includes("htt-500")||m.includes("teltronic"))return {src:TELTRONIC_IMG,alt:"Teltronic HTT-500"};return null}
 
-const SUPABASE_URL = "https://hsbreiibrllvbpbwfcoa.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_CFBQFi5SCMTLBSCvAWh7yw_pz0E1Kb3";
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-const $ = (s) => document.querySelector(s);
-let currentRadio = null;
-let currentRadioData = null;
-let currentMovements = [];
-let editingMovement = null;
-
-function esc(v=""){ return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])); }
-function mezua(t,ok=true){ const e=$("#mezua"); e.textContent=t; e.className=ok?"mezua ondo":"mezua errorea"; setTimeout(()=>e.textContent="",3500); }
-function fmtDate(v){ return v ? new Date(v+"T00:00:00").toLocaleDateString("eu-ES") : ""; }
-function today(){ return new Date().toISOString().slice(0,10); }
-
-function closeHistory(){
-  $("#histModal").hidden=true;
-}
-function setNavEnabled(enabled){
-  ["navMov","navHist","navExp","logout"].forEach(id=>{
-    const el=$("#"+id);
-    if(el) el.disabled=!enabled;
-  });
-}
-async function saioa(){
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session){
-    $("#app").hidden=true;
-    $("#login").hidden=false;
-    currentRadio=null;
-    currentRadioData=null;
-    closeHistory();
-    setNavEnabled(false);
-    return;
-  }
-  $("#login").hidden=true;
-  $("#app").hidden=false;
-  setNavEnabled(true);
-  closeHistory();
-  kargatuIrratiak();
-}
-$("#loginForm").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const {error}=await supabase.auth.signInWithPassword({email:$("#email").value.trim(),password:$("#password").value});
-  if(error) mezua(error.message,false); else saioa();
-});
-$("#logout").onclick=async()=>{closeHistory(); await supabase.auth.signOut(); await saioa();};
+async function saioa(){const {data:{session}}=await supabase.auth.getSession();if(!session){$("#app").hidden=true;$("#login").hidden=false;return}$("#login").hidden=true;$("#app").hidden=false;await kargatuIrratiak()}
+$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const {error}=await supabase.auth.signInWithPassword({email:$("#email").value.trim(),password:$("#password").value});if(error)toast(error.message,false);else saioa()});
+$("#logout").onclick=async()=>{await supabase.auth.signOut();currentRadio=null;currentRadioData=null;$("#radioDetail").hidden=true;$("#movSection").hidden=true;saioa()};
 
 async function kargatuIrratiak(){
-  const q=$("#bilaketa").value.trim();
-  let query=supabase.from("irratia").select("*").order("alias");
-  if(q){
-    const n=Number(q);
-    query=query.or(`alias.ilike.%${q}%,marka.ilike.%${q}%,modelo.ilike.%${q}%${Number.isFinite(n)?`,zka.eq.${n}`:""}`);
-  }
-  const [{data,error},{data:movData,error:movError}]=await Promise.all([
-    query,
-    supabase.from("mugimenduak").select("radio_id,arreta,teltronic,noiztik,id").order("noiztik",{ascending:false}).order("id",{ascending:false})
-  ]);
-  if(error){mezua(error.message,false);return;}
-  if(movError){mezua(movError.message,false);return;}
-  const azkenMugimendua=new Map();
-  (movData||[]).forEach(m=>{ if(m.radio_id!=null && !azkenMugimendua.has(m.radio_id)) azkenMugimendua.set(m.radio_id,m); });
-  $("#irratiaKop").textContent=`${data.length} irrati`;
-  $("#irratiaRows").innerHTML=data.map(r=>{
-    const m=azkenMugimendua.get(r.id)||{};
-    return `
-    <tr class="radio-row" data-radio-row="${r.id}" onclick="window.openRadio(${r.id})">
-      <td><button class="esteka zka-link" data-id="${r.id}">${esc(r.zka??"")}</button></td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
-      <td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td>
-      <td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td>
-      <td><span class="egoera ${r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo"}">${r.baja_definitiva?"Behin betiko baja":r.sustituido?"Ordezkatua":"Aktibo"}</span></td>
-      <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
-    </tr>`;
-  }).join("");
-  // La fila completa se abre mediante onclick directo en la propia fila.
+  const {data,error}=await supabase.from("irratia").select("*").order("alias");if(error){toast(error.message,false);return}radios=data||[];
+  const {data:mv,error:me}=await supabase.from("mugimenduak").select("radio_id,arreta,teltronic,noiztik,id").order("noiztik",{ascending:false}).order("id",{ascending:false});
+  if(me){toast(me.message,false);return}latestMap=new Map();for(const x of (mv||[])){if(!latestMap.has(x.radio_id))latestMap.set(x.radio_id,x)}
+  populateFilters();renderRadios();
+  if(radios.length&&!currentRadio) await irekiIrratia(radios[0].id);
+}
+function populateFilters(){
+ const salas=[...new Set(radios.map(r=>r.mota).filter(Boolean))].sort();const f=$("#fSala");f.innerHTML='<option value="">Saila: Guztiak</option>'+salas.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+ const ks=[...new Set(radios.map(r=>r.alias).filter(Boolean))].slice(0,0); // reserved for future location field
+ $("#fKokapena").innerHTML='<option value="">Kokapena: Guztiak</option>';
+}
+function filtered(){const q=$("#bilaketa").value.trim().toLowerCase(),e=$("#fEgoera").value,s=$("#fSala").value;if(!q&&!e&&!s)return radios;return radios.filter(r=>{const text=[r.zka,r.alias,r.marka,r.modelo,r.tei].join(" ").toLowerCase();return(!q||text.includes(q))&&(!e||statusOf(r)===e)&&(!s||String(r.mota||"")===s)})}
+function renderRadios(){const arr=filtered();$("#irratiaKop").textContent=`(${arr.length})`;$("#irratiaRows").innerHTML=arr.length?arr.map(r=>{const l=latestMap.get(r.id)||{};return `<tr class="radio-row ${currentRadio===r.id?'selected':''}" data-radio-id="${r.id}" tabindex="0"><td>${esc(r.zka??"")}</td><td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td><td>${esc(r.tei??"")}</td><td>${esc(l.arreta??"")}</td><td>${esc(l.teltronic??"")}</td><td>${esc(r.mota??"")}</td><td><span class="status ${statusOf(r)}">${statusText(r)}</span></td><td>${esc(r.alias??"")}</td></tr>`}).join(""):`<tr><td colspan="9" class="empty">Ez da irrati aurkitu.</td></tr>`;
+ document.querySelectorAll(".radio-row").forEach(row=>{const id=Number(row.dataset.radioId);row.addEventListener("click",()=>irekiIrratia(id));row.addEventListener("keydown",e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();irekiIrratia(id)}})});
+}
+["#bilaketa","#fEgoera","#fSala","#fKokapena"].forEach(s=>$(s).addEventListener(s==="#bilaketa"?"input":"change",renderRadios));
+$("#irratiBerria").onclick=()=>irekiIrratia(null);
+window.irekiIrratia=irekiIrratia;
+
 async function irekiIrratia(id){
-  currentRadio=id;
-  $("#irratiXehetasuna").hidden=false;
-  if(id===null){
-    currentRadioData=null; currentMovements=[];
-    $("#irratiForm").reset(); $("#id").value=""; $("#izenburua").textContent="Irrati berria";
-    $("#mugimenduPanela").hidden=true; return;
-  }
-  const {data,error}=await supabase.from("irratia").select("*").eq("id",id).single();
-  if(error){mezua(error.message,false);return;}
-  currentRadioData=data;
-  $("#izenburua").textContent=data.alias||data.zka||"Irratia";
-  $("#zkaBurua").textContent=data.zka??"";
-  $("#editatzeko").value=JSON.stringify(data);
-  $("#mugimenduEditPanela").hidden=true;
-  await kargatuMugimenduak(id);
-  const azken=currentMovements[0]||{};
-  $("#datuak").innerHTML=`
-    <div><span>ZKA</span><strong>${esc(data.zka??"")}</strong></div>
-    <div><span>Alias</span><strong>${esc(data.alias??"")}</strong></div>
-    <div><span>Marka</span><strong>${esc(data.marka??"")}</strong></div>
-    <div><span>Modeloa</span><strong>${esc(data.modelo??"")}</strong></div>
-    <div><span>TEI</span><strong>${esc(data.tei??"")}</strong></div>
-    <div><span>Mota</span><strong>${esc(data.mota??"")}</strong></div>
-    <div><span>Arreta Zb.</span><strong>${esc(azken.arreta??"")}</strong></div>
-    <div><span>RMA</span><strong>${esc(azken.teltronic??"")}</strong></div>
-    <div><span>GPS</span><strong>${data.gps?"Bai":"Ez"}</strong></div>
-    <div><span>Gateway</span><strong>${data.gateway?"Bai":"Ez"}</strong></div>
-    <div><span>Behin betiko baja</span><strong>${data.baja_definitiva?"Bai":"Ez"}</strong></div>
-    <div><span>Ordezkatua</span><strong>${data.sustituido?"Bai":"Ez"}</strong></div>`;
+ currentRadio=id;renderRadios();$("#radioDetail").hidden=false;
+ if(id===null){currentRadioData=null;currentMovements=[];$("#radioDetail").innerHTML='<div class="detail-title">Irrati berria</div>';$("#movSection").hidden=true;openEdit(null);return}
+ const {data,error}=await supabase.from("irratia").select("*").eq("id",id).single();if(error){toast(error.message,false);return}currentRadioData=data;
+ await kargatuMugimenduak(id);renderDetail();
 }
-function itxiIrratia(){ $("#irratiXehetasuna").hidden=true; currentRadio=null; currentRadioData=null; }
-
-$("#editIrratia").onclick=()=>{
-  if(!currentRadio)return;
-  const d=JSON.parse($("#editatzeko").value);
-  $("#id").value=d.id; $("#zka").value=d.zka??""; $("#alias").value=d.alias??""; $("#mota").value=d.mota??"";
-  $("#marka").value=d.marka??""; $("#modelo").value=d.modelo??""; $("#tei").value=d.tei??"";
-  ["gps","gateway","baja_definitiva","sustituido"].forEach(k=>$("#"+k).checked=!!d[k]);
-  $("#editPanela").hidden=false;
-};
-$("#cancelEdit").onclick=()=>$("#editPanela").hidden=true;
-$("#irratiForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const obj={zka:$("#zka").value?Number($("#zka").value):null,alias:$("#alias").value.trim()||null,mota:$("#mota").value.trim()||null,
-    marka:$("#marka").value.trim()||null,modelo:$("#modelo").value.trim()||null,tei:$("#tei").value?Number($("#tei").value):null,
-    gps:$("#gps").checked,gateway:$("#gateway").checked,baja_definitiva:$("#baja_definitiva").checked,sustituido:$("#sustituido").checked};
-  const result=currentRadio?await supabase.from("irratia").update(obj).eq("id",currentRadio):await supabase.from("irratia").insert(obj);
-  if(result.error){mezua(result.error.message,false);return;}
-  $("#editPanela").hidden=true; mezua("Irratia gordeta"); if(currentRadio) irekiIrratia(currentRadio); else kargatuIrratiak();
-});
-
-async function kargatuMugimenduak(id){
-  const {data,error}=await supabase.from("mugimenduak").select("*").eq("radio_id",id).order("noiztik",{ascending:false}).order("id",{ascending:false});
-  if(error){mezua(error.message,false);return;}
-  currentMovements=data||[];
-  $("#mugimenduKop").textContent=`${currentMovements.length} erregistro`;
-  $("#mugimenduRows").innerHTML=currentMovements.length?currentMovements.map(x=>`
-  <tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td>
-  <td>${x.bateria==null?"":esc(x.bateria)}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${x.funda?"Bai":"Ez"}</td><td>${x.micro?"Bai":"Ez"}</td><td>${x.karga?"Bai":"Ez"}</td>
-  <td><button class="txiki edit-mov" data-id="${x.id}">Editatu</button> <button class="txiki ezabatu" data-id="${x.id}">Ezabatu</button></td></tr>`).join("") :
-  `<tr><td colspan="11" class="hutsunea">Ez dago mugimendurik.<br><span>Lehenengo egoera gaurko datatik aurrera erregistra dezakezu.</span></td></tr>`;
-  document.querySelectorAll(".ezabatu").forEach(b=>b.onclick=async()=>{
-    if(!confirm("Mugimendu hau ezabatu nahi duzu?"))return;
-    const {error}=await supabase.from("mugimenduak").delete().eq("id",Number(b.dataset.id));
-    if(error)mezua(error.message,false);else kargatuMugimenduak(id);
-  });
-  document.querySelectorAll(".edit-mov").forEach(b=>b.onclick=()=>irekiMugimenduForm(currentMovements.find(x=>x.id===Number(b.dataset.id))));
+function renderDetail(){const r=currentRadioData,l=latestMap.get(r.id)||{},img=modelImage(r);$("#radioDetail").innerHTML=`<div class="detail-top"><div><div class="detail-title">${esc(r.alias||r.zka||"Irratia")}</div><div class="detail-model">${esc(r.marka||"")} ${esc(r.modelo||"")}</div></div><span class="status ${statusOf(r)}">${statusText(r)}</span></div><div class="detail-image">${img?`<img src="${img.src}" alt="${esc(img.alt)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:""}<div class="device-placeholder" style="display:${img?'none':'block'}">📡</div></div><div class="detail-data"><div><span>Marka:</span><strong>${esc(r.marka??"")}</strong></div><div><span>Modeloa:</span><strong>${esc(r.modelo??"")}</strong></div><div><span>Serie Zenb.:</span><strong>${esc(r.tei??"")}</strong></div><div><span>Arreta Zb.:</span><strong>${esc(l.arreta??"")}</strong></div><div><span>RMA:</span><strong>${esc(l.teltronic??"")}</strong></div><div><span>Saila:</span><strong>${esc(r.mota??"")}</strong></div><div><span>ZKA:</span><strong>${esc(r.zka??"")}</strong></div><div><span>GPS:</span><strong>${r.gps?'Bai':'Ez'}</strong></div><div><span>Gateway:</span><strong>${r.gateway?'Bai':'Ez'}</strong></div></div><div class="detail-actions"><button class="primary" id="detailEdit">✎ Editatu</button><button id="detailHist">◷ Historia</button><button id="detailNewMov">＋ Mugimendu berria</button></div>`;
+ $("#detailEdit").onclick=()=>openEdit(r);$("#detailHist").onclick=openHistory;$("#detailNewMov").onclick=()=>openMovementForm();$("#movementRadioName").textContent=`(${esc(r.alias||r.zka||"")})`;
+ $("#movSection").hidden=false;
 }
 
-function irekiMugimenduForm(m=null){
-  editingMovement=m;
-  $("#mugimenduFormTitle").textContent=m?"Mugimendua editatu":"Mugimendu berria";
-  $("#mugimenduId").value=m?.id??"";
-  $("#m_nork").value=m?.nork??"";
-  $("#m_noiztik").value=m?.noiztik??today();
-  $("#m_noizarte").value=m?.noizarte??"";
-  $("#m_zergatia").value=m?.zergatia??"";
-  $("#m_bateria").value=m?.bateria??"";
-  $("#m_arreta").value=m?.arreta??"";
-  $("#m_teltronic").value=m?.teltronic??"";
-  ["funda","micro","karga"].forEach(k=>$("#m_"+k).checked=!!m?.[k]);
-  $("#m_kablea").checked=!!m?.kablea_12v;
-  $("#mugimenduEditPanela").hidden=false;
-  $("#mugimenduEditPanela").scrollIntoView({behavior:"smooth",block:"start"});
-}
-$("#mugimenduBerria").onclick=()=>irekiMugimenduForm();
-$("#cancelMugimendu").onclick=()=>{$("#mugimenduEditPanela").hidden=true;editingMovement=null;};
-$("#mugimenduForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  if(!currentRadio)return;
-  const obj={
-    radio_id:currentRadio,
-    nork:$("#m_nork").value.trim()||null,
-    noiztik:$("#m_noiztik").value||null,
-    noizarte:$("#m_noizarte").value||null,
-    zergatia:$("#m_zergatia").value.trim()||null,
-    bateria:$("#m_bateria").value===""?null:Number($("#m_bateria").value),
-    arreta:$("#m_arreta").value===""?null:Number($("#m_arreta").value),
-    teltronic:$("#m_teltronic").value.trim()||null,
-    funda:$("#m_funda").checked,micro:$("#m_micro").checked,karga:$("#m_karga").checked,kablea_12v:$("#m_kablea").checked
-  };
-  const result=editingMovement
-    ? await supabase.from("mugimenduak").update(obj).eq("id",editingMovement.id)
-    : await supabase.from("mugimenduak").insert(obj);
-  if(result.error){mezua(result.error.message,false);return;}
-  $("#mugimenduEditPanela").hidden=true; editingMovement=null; mezua("Mugimendua gordeta"); kargatuMugimenduak(currentRadio);
-});
+async function kargatuMugimenduak(id){const {data,error}=await supabase.from("mugimenduak").select("*").eq("radio_id",id).order("noiztik",{ascending:false}).order("id",{ascending:false});if(error){toast(error.message,false);return}currentMovements=data||[];if(currentMovements[0])latestMap.set(id,currentMovements[0]);renderMovements();}
+function renderMovements(){const rows=$("#mugimenduRows");rows.innerHTML=currentMovements.length?currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(x.zergatia||"")}</td><td>—</td><td>—</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td><button class="row-action edit-mov" data-id="${x.id}">Editatu</button> <button class="row-action danger del-mov" data-id="${x.id}">Ezabatu</button></td></tr>`).join(""):`<tr><td colspan="9" class="empty">Ez dago mugimendurik.</td></tr>`;document.querySelectorAll('.edit-mov').forEach(b=>b.onclick=()=>openMovementForm(currentMovements.find(x=>x.id===Number(b.dataset.id))));document.querySelectorAll('.del-mov').forEach(b=>b.onclick=async()=>{if(!confirm('Mugimendu hau ezabatu nahi duzu?'))return;const {error}=await supabase.from('mugimenduak').delete().eq('id',Number(b.dataset.id));if(error)toast(error.message,false);else{await kargatuMugimenduak(currentRadio);renderDetail()}})}
 
-function openHistory(){
-  if(!currentRadio || !currentRadioData){ closeHistory(); mezua("Lehenengo hautatu irrati bat.",false); return; }
-  $("#histTitle").textContent=`Historia — ${currentRadioData.alias||currentRadioData.zka||""}`;
-  $("#histContent").innerHTML=currentMovements.length ? `
-    <p>${currentMovements.length} erregistro historiko.</p>
-    <div class="historytable"><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th><th>Osagarriak</th></tr></thead>
-    <tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.bateria??"")}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${[x.funda?"Funda":"",x.micro?"Mikroa":"",x.karga?"Karga":"",x.kablea_12v?"12V":""] .filter(Boolean).join(", ")}</td></tr>`).join("")}</tbody></table></div>` :
-    `<p class="hutsunea">Ez dago mugimendurik.</p>`;
-  $("#histModal").hidden=false;
-}
-$("#historiala").onclick=openHistory;
-$("#histBottom").onclick=openHistory;
-$("#closeHist").addEventListener("click",closeHistory);
-$("#histModal").addEventListener("click",e=>{if(e.target.id==="histModal")closeHistory();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHistory();});
+function openEdit(r){$("#editPanel").hidden=false;$("#editTitle").textContent=r?'Irratia editatu':'Irrati berria';$("#id").value=r?.id??'';$("#zka").value=r?.zka??'';$("#alias").value=r?.alias??'';$("#marka").value=r?.marka??'';$("#modelo").value=r?.modelo??'';$("#tei").value=r?.tei??'';$("#mota").value=r?.mota??'';["gps","gateway","baja_definitiva","sustituido"].forEach(k=>$("#"+k).checked=!!r?.[k]);$("#deleteRadio").style.display=r?'inline-block':'none';$("#editPanel").scrollIntoView({behavior:'smooth',block:'start'})}
+$("#cancelEdit").onclick=()=>$("#editPanel").hidden=true;
+$("#irratiForm").addEventListener('submit',async e=>{e.preventDefault();const obj={zka:$("#zka").value?Number($("#zka").value):null,alias:$("#alias").value.trim()||null,marka:$("#marka").value.trim()||null,modelo:$("#modelo").value.trim()||null,tei:$("#tei").value?Number($("#tei").value):null,mota:$("#mota").value.trim()||null,gps:$("#gps").checked,gateway:$("#gateway").checked,baja_definitiva:$("#baja_definitiva").checked,sustituido:$("#sustituido").checked};const id=$("#id").value;const res=id?await supabase.from('irratia').update(obj).eq('id',Number(id)):await supabase.from('irratia').insert(obj);if(res.error){toast(res.error.message,false);return}$("#editPanel").hidden=true;toast('Irratia gordeta');await kargatuIrratiak();if(id)await irekiIrratia(Number(id))});
+$("#deleteRadio").onclick=async()=>{const id=$("#id").value;if(!id||!confirm('Irrati hau ezabatu nahi duzu?'))return;const {error}=await supabase.from('irratia').delete().eq('id',Number(id));if(error)toast(error.message,false);else{$("#editPanel").hidden=true;currentRadio=null;$("#radioDetail").hidden=true;$("#movSection").hidden=true;toast('Irratia ezabatuta');await kargatuIrratiak()}};
 
-async function loadSheetJS(){
-  if(window.XLSX)return window.XLSX;
-  await new Promise((resolve,reject)=>{
-    const s=document.createElement("script");
-    s.src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
-    s.onload=resolve; s.onerror=reject; document.head.appendChild(s);
-  });
-  return window.XLSX;
-}
-async function exportExcel(){
-  if(!currentRadioData)return;
-  try{
-    const XLSX=await loadSheetJS();
-    const rows=currentMovements.map(x=>({
-      ZKA:currentRadioData.zka??"", Alias:currentRadioData.alias??"", TEI:currentRadioData.tei??"",
-      Hasiera:x.noiztik??"", Amaiera:x.noizarte??"", Nork:x.nork??"", Arrazoia:x.zergatia??"",
-      Bateria:x.bateria??"", "Arreta Zb.":x.arreta??"", RMA:x.teltronic??"",
-      Funda:x.funda?"Bai":"Ez", Mikroa:x.micro?"Bai":"Ez", Karga:x.karga?"Bai":"Ez", "12V kablea":x.kablea_12v?"Bai":"Ez"
-    }));
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{ZKA:currentRadioData.zka??"",Alias:currentRadioData.alias??"",TEI:currentRadioData.tei??""}]);
-    XLSX.utils.book_append_sheet(wb,ws,"Historia");
-    XLSX.writeFile(wb,`TETRA_${currentRadioData.alias||currentRadioData.zka}_historia.xlsx`);
-    mezua("Excel fitxategia sortu da.");
-  }catch(e){
-    console.error(e);
-    mezua("Excel esportazioa ezin izan da egin.",false);
-  }
-}
-$("#excel").onclick=exportExcel; $("#excelBottom").onclick=exportExcel;
+function openMovementForm(m=null){editingMovement=m;$("#movementEdit").hidden=false;$("#movementEditTitle").textContent=m?'Mugimendua editatu':'Mugimendu berria';$("#movementId").value=m?.id??'';$("#m_nork").value=m?.nork??'';$("#m_noiztik").value=m?.noiztik??today();$("#m_noizarte").value=m?.noizarte??'';$("#m_zergatia").value=m?.zergatia??'';$("#m_bateria").value=m?.bateria??'';$("#m_arreta").value=m?.arreta??'';$("#m_teltronic").value=m?.teltronic??'';["funda","micro","karga"].forEach(k=>$("#m_"+k).checked=!!m?.[k]);$("#m_kablea").checked=!!m?.kablea_12v;$("#movementEdit").scrollIntoView({behavior:'smooth',block:'start'})}
+$("#mugimenduBerria").onclick=()=>openMovementForm();$("#cancelMovement").onclick=()=>$("#movementEdit").hidden=true;
+$("#movementForm").addEventListener('submit',async e=>{e.preventDefault();if(!currentRadio)return;const obj={radio_id:currentRadio,nork:$("#m_nork").value.trim()||null,noiztik:$("#m_noiztik").value||null,noizarte:$("#m_noizarte").value||null,zergatia:$("#m_zergatia").value.trim()||null,bateria:$("#m_bateria").value===''?null:Number($("#m_bateria").value),arreta:$("#m_arreta").value===''?null:Number($("#m_arreta").value),teltronic:$("#m_teltronic").value.trim()||null,funda:$("#m_funda").checked,micro:$("#m_micro").checked,karga:$("#m_karga").checked,kablea_12v:$("#m_kablea").checked};const id=$("#movementId").value;const res=id?await supabase.from('mugimenduak').update(obj).eq('id',Number(id)):await supabase.from('mugimenduak').insert(obj);if(res.error){toast(res.error.message,false);return}$("#movementEdit").hidden=true;editingMovement=null;toast('Mugimendua gordeta');await kargatuMugimenduak(currentRadio);renderDetail();await kargatuIrratiak()});
 
-function exportPDF(){
-  if(!currentRadioData)return;
-  const w=window.open("","_blank");
-  if(!w){mezua("Nabigatzaileak leihoa blokeatu du.",false);return;}
-  const rows=currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.bateria??"")}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td></tr>`).join("");
-  w.document.write(`<html><head><title>TETRA ${esc(currentRadioData.alias||"")}</title><style>
-  body{font-family:Arial,sans-serif;padding:28px;color:#18253d}h1{margin:0 0 6px}small{color:#68748a}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:7px;text-align:left;font-size:11px}th{background:#eef3f8}@media print{button{display:none}}
-  </style></head><body><h1>TETRA — ${esc(currentRadioData.alias||"Irratia")}</h1><small>ZKA: ${esc(currentRadioData.zka??"")} · TEI: ${esc(currentRadioData.tei??"")} · Marka: ${esc(currentRadioData.marka??"")} · Modeloa: ${esc(currentRadioData.modelo??"")} · Arreta Zb.: ${esc(currentMovements[0]?.arreta??"")} · RMA: ${esc(currentMovements[0]?.teltronic??"")}</small>
-  <h2>Historia (${currentMovements.length})</h2><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th></tr></thead><tbody>${rows}</tbody></table>
-  <script>window.onload=()=>window.print();</script></body></html>`);
-  w.document.close();
-}
-$("#pdf").onclick=exportPDF; $("#pdfBottom").onclick=exportPDF;
+function openHistory(){if(!currentRadioData)return;const l=latestMap.get(currentRadio)||{};$("#histTitle").textContent=`Historia — ${currentRadioData.alias||currentRadioData.zka||''}`;$("#histContent").innerHTML=currentMovements.length?`<div class="table-scroll"><table class="movement-table"><thead><tr><th>Data</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th><th>Funda</th><th>Mikroa</th><th>Karga</th></tr></thead><tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||'')}</td><td>${esc(x.zergatia||'')}</td><td>${esc(x.bateria??'')}</td><td>${esc(x.arreta??'')}</td><td>${esc(x.teltronic??'')}</td><td>${x.funda?'Bai':'Ez'}</td><td>${x.micro?'Bai':'Ez'}</td><td>${x.karga?'Bai':'Ez'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">Ez dago mugimendurik.</div>`;$("#histModal").hidden=false}
+$("#closeHist").onclick=()=>$("#histModal").hidden=true;$("#histModal").addEventListener('click',e=>{if(e.target.id==='histModal')$("#histModal").hidden=true});document.addEventListener('keydown',e=>{if(e.key==='Escape'){$("#histModal").hidden=true}});
 
-$("#navMov").onclick=()=>{ if(currentRadio) document.querySelector(".txartela:last-of-type")?.scrollIntoView({behavior:"smooth"}); };
-$("#navHist").onclick=()=>{ if(currentRadio&&currentRadioData) openHistory(); else mezua("Lehenengo hautatu irrati bat.",false); };
-$("#navExp").onclick=()=>currentRadio?exportExcel():mezua("Lehenengo hautatu irrati bat.",false);
-
+async function loadXLSX(){if(window.XLSX)return window.XLSX;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)});return window.XLSX}
+async function exportExcel(){if(!currentRadioData)return;try{const XLSX=await loadXLSX();const rows=currentMovements.map(x=>({ZKA:currentRadioData.zka??'',Alias:currentRadioData.alias??'',Marka:currentRadioData.marka??'',Modeloa:currentRadioData.modelo??'',TEI:currentRadioData.tei??'','Arreta Zb.':x.arreta??'',RMA:x.teltronic??'',Hasiera:x.noiztik??'',Amaiera:x.noizarte??'',Nork:x.nork??'',Arrazoia:x.zergatia??'',Bateria:x.bateria??'',Funda:x.funda?'Bai':'Ez',Mikroa:x.micro?'Bai':'Ez',Karga:x.karga?'Bai':'Ez','12V kablea':x.kablea_12v?'Bai':'Ez'}));const wb=XLSX.utils.book_new();const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{ZKA:currentRadioData.zka??'',Alias:currentRadioData.alias??'',Marka:currentRadioData.marka??'',Modeloa:currentRadioData.modelo??'',TEI:currentRadioData.tei??'','Arreta Zb.':latestMap.get(currentRadio)?.arreta??'',RMA:latestMap.get(currentRadio)?.teltronic??''}]);XLSX.utils.book_append_sheet(wb,ws,'Historia');XLSX.writeFile(wb,`TETRA_${currentRadioData.alias||currentRadioData.zka}_historia.xlsx`);toast('Excel fitxategia sortu da')}catch(e){console.error(e);toast('Excel esportazioa ezin izan da egin',false)}}
+$("#excel").onclick=exportExcel;
+function exportPDF(){if(!currentRadioData)return;const l=latestMap.get(currentRadio)||{};const w=window.open('','_blank');if(!w){toast('Nabigatzaileak leihoa blokeatu du',false);return}const rows=currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||'')}</td><td>${esc(x.zergatia||'')}</td><td>${esc(x.bateria??'')}</td><td>${esc(x.arreta??'')}</td><td>${esc(x.teltronic??'')}</td></tr>`).join('');w.document.write(`<html><head><title>Tetra Irratiak - ${esc(currentRadioData.alias||'')}</title><style>body{font-family:Arial,sans-serif;color:#18304a;padding:30px}h1{margin:0 0 8px}table{width:100%;border-collapse:collapse;margin-top:18px}th,td{border:1px solid #ccd7e2;padding:7px;font-size:11px;text-align:left}th{background:#eef3f8}.meta{color:#5f7288}@media print{button{display:none}}</style></head><body><h1>Tetra Irratiak — ${esc(currentRadioData.alias||currentRadioData.zka||'Irratia')}</h1><div class="meta">ZKA: ${esc(currentRadioData.zka??'')} · Marka: ${esc(currentRadioData.marka??'')} · Modeloa: ${esc(currentRadioData.modelo??'')} · TEI: ${esc(currentRadioData.tei??'')} · Arreta Zb.: ${esc(l.arreta??'')} · RMA: ${esc(l.teltronic??'')}</div><h2>Historia (${currentMovements.length})</h2><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()</script></body></html>`);w.document.close()}
+$("#pdf").onclick=exportPDF;
+$("#navMov").onclick=()=>currentRadio?$("#movSection").scrollIntoView({behavior:'smooth'}):toast('Lehenengo hautatu irrati bat',false);$("#navHist").onclick=openHistory;$("#navExp").onclick=()=>currentRadio?exportExcel():toast('Lehenengo hautatu irrati bat',false);
 saioa();
-
-// Expuesto globalmente para el clic directo de las filas.
-window.openRadio = irekiIrratia;
