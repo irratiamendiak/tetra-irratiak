@@ -61,63 +61,65 @@ async function kargatuIrratiak(){
   ]);
   if(error){mezua(error.message,false);return;}
   if(movError){mezua(movError.message,false);return;}
+  const motaSel=$("#motaFilter"), markaSel=$("#markaFilter");
+  if(motaSel && motaSel.options.length===1){[...new Set((data||[]).map(r=>r.mota).filter(Boolean))].sort().forEach(v=>motaSel.add(new Option(v,v)));}
+  if(markaSel && markaSel.options.length===1){[...new Set((data||[]).map(r=>r.marka).filter(Boolean))].sort().forEach(v=>markaSel.add(new Option(v,v)));}
   const azkenMugimendua=new Map();
   (movData||[]).forEach(m=>{ if(m.radio_id!=null && !azkenMugimendua.has(m.radio_id)) azkenMugimendua.set(m.radio_id,m); });
-  $("#irratiaKop").textContent=`${data.length} irrati`;
-  $("#irratiaRows").innerHTML=data.map(r=>{
+  const egoeraF = $("#egoeraFilter")?.value || "";
+  const motaF = $("#motaFilter")?.value || "";
+  const markaF = $("#markaFilter")?.value || "";
+  let radios = (data||[]).filter(r=>{
+    const egoera=r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo";
+    return (!egoeraF || egoera===egoeraF) && (!motaF || (r.mota||"")===motaF) && (!markaF || (r.marka||"")===markaF);
+  });
+  $("#irratiaKop").textContent=`${radios.length} irrati`;
+  const egoeraText=r=>r.baja_definitiva?"Behin betiko baja":r.sustituido?"Ordezkatua":"Aktiboa";
+  const egoeraClass=r=>r.baja_definitiva?"retired":r.sustituido?"replaced":"active";
+  $("#irratiaRows").innerHTML=radios.map(r=>{
     const m=azkenMugimendua.get(r.id)||{};
-    return `
-    <tr class="radio-row" data-radio-row="${r.id}">
-      <td><button class="esteka zka-link" data-id="${r.id}">${esc(r.zka??"")}</button></td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
-      <td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td>
-      <td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td>
-      <td><span class="egoera ${r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo"}">${r.baja_definitiva?"Behin betiko baja":r.sustituido?"Ordezkatua":"Aktibo"}</span></td>
-      <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
-    </tr>`;
-  }).join("");
-  // Un único manejador sobre la tabla: ZKA, alias, botón "Ikusi" o cualquier celda de la fila abren la radio.
-  const rows = $("#irratiaRows");
-  rows.onclick = (e) => {
-    const row = e.target.closest("tr.radio-row");
-    if (!row || !rows.contains(row)) return;
-    const id = Number(row.dataset.radioRow);
-    if (Number.isFinite(id)) irekiIrratia(id);
-  };
+    return `<tr class="radio-row ${currentRadio===r.id?"selected":""}" data-radio-row="${r.id}">
+      <td><strong>${esc(r.alias||r.zka||"")}</strong></td><td>${esc(r.tei??"")}</td><td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td><td>${esc(r.mota??"")}</td>
+      <td><span class="status ${egoeraClass(r)}">${egoeraText(r)}</span></td><td style="text-align:center;font-size:24px;color:#6b7d91">›</td></tr>`;
+  }).join("") || `<tr><td colspan="7" style="padding:35px;text-align:center;color:#68788d">Ez da irratirik aurkitu.</td></tr>`;
+  const rows=$("#irratiaRows");
+  rows.onclick=(e)=>{ const row=e.target.closest("tr.radio-row"); if(!row)return; const id=Number(row.dataset.radioRow); if(Number.isFinite(id)) irekiIrratia(id,true); };
 }
+
 $("#bilaketa").addEventListener("input",kargatuIrratiak);
+["egoeraFilter","motaFilter","markaFilter"].forEach(id=>$("#"+id)?.addEventListener("change",kargatuIrratiak));
 $("#irratiBerria").onclick=()=>irekiIrratia(null);
 $("#itxiIrratia").onclick=()=>itxiIrratia();
 
-async function irekiIrratia(id){
+async function irekiIrratia(id,fromRow=false){
   currentRadio=id;
   $("#irratiXehetasuna").hidden=false;
   if(id===null){
     currentRadioData=null; currentMovements=[];
     $("#irratiForm").reset(); $("#id").value=""; $("#izenburua").textContent="Irrati berria";
-    $("#mugimenduPanela").hidden=true; return;
+    $("#mugimenduEditPanela").hidden=true; return;
   }
   const {data,error}=await supabase.from("irratia").select("*").eq("id",id).single();
   if(error){mezua(error.message,false);return;}
   currentRadioData=data;
   $("#izenburua").textContent=data.alias||data.zka||"Irratia";
-  $("#zkaBurua").textContent=data.zka??"";
+  const st=$("#statusBurua"); st.className=`status ${data.baja_definitiva?"retired":data.sustituido?"replaced":"active"}`; st.textContent=data.baja_definitiva?"Behin betiko baja":data.sustituido?"Ordezkatua":"Aktiboa";
   $("#editatzeko").value=JSON.stringify(data);
   $("#mugimenduEditPanela").hidden=true;
   await kargatuMugimenduak(id);
   const azken=currentMovements[0]||{};
   $("#datuak").innerHTML=`
-    <div><span>ZKA</span><strong>${esc(data.zka??"")}</strong></div>
-    <div><span>Alias</span><strong>${esc(data.alias??"")}</strong></div>
-    <div><span>Marka</span><strong>${esc(data.marka??"")}</strong></div>
-    <div><span>Modeloa</span><strong>${esc(data.modelo??"")}</strong></div>
-    <div><span>TEI</span><strong>${esc(data.tei??"")}</strong></div>
-    <div><span>Mota</span><strong>${esc(data.mota??"")}</strong></div>
-    <div><span>Arreta Zb.</span><strong>${esc(azken.arreta??"")}</strong></div>
-    <div><span>RMA</span><strong>${esc(azken.teltronic??"")}</strong></div>
-    <div><span>GPS</span><strong>${data.gps?"Bai":"Ez"}</strong></div>
-    <div><span>Gateway</span><strong>${data.gateway?"Bai":"Ez"}</strong></div>
-    <div><span>Behin betiko baja</span><strong>${data.baja_definitiva?"Bai":"Ez"}</strong></div>
-    <div><span>Ordezkatua</span><strong>${data.sustituido?"Bai":"Ez"}</strong></div>`;
+    <div><span>TEI:</span><strong>${esc(data.tei??"")}</strong></div>
+    <div><span>Arreta Zb.:</span><strong>${esc(azken.arreta??"")}</strong></div>
+    <div><span>RMA:</span><strong>${esc(azken.teltronic??"")}</strong></div>
+    <div><span>Saila:</span><strong>${esc(data.mota??"")}</strong></div>
+    <div><span>Kokapena:</span><strong>—</strong></div>
+    <div><span>Marka:</span><strong>${esc(data.marka??"")}</strong></div>
+    <div><span>Modeloa:</span><strong>${esc(data.modelo??"")}</strong></div>
+    <div><span>GPS:</span><strong>${data.gps?"Bai":"Ez"}</strong></div>
+    <div><span>Gateway:</span><strong>${data.gateway?"Bai":"Ez"}</strong></div>
+    <div><span>Oharrak:</span><strong>—</strong></div>`;
+  if(fromRow) setTimeout(()=>$("#irratiXehetasuna").scrollIntoView({behavior:"smooth",block:"start"}),30);
 }
 function itxiIrratia(){ $("#irratiXehetasuna").hidden=true; currentRadio=null; currentRadioData=null; }
 
@@ -146,10 +148,9 @@ async function kargatuMugimenduak(id){
   currentMovements=data||[];
   $("#mugimenduKop").textContent=`${currentMovements.length} erregistro`;
   $("#mugimenduRows").innerHTML=currentMovements.length?currentMovements.map(x=>`
-  <tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td>
-  <td>${x.bateria==null?"":esc(x.bateria)}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${x.funda?"Bai":"Ez"}</td><td>${x.micro?"Bai":"Ez"}</td><td>${x.karga?"Bai":"Ez"}</td>
-  <td><button class="txiki edit-mov" data-id="${x.id}">Editatu</button> <button class="txiki ezabatu" data-id="${x.id}">Ezabatu</button></td></tr>`).join("") :
-  `<tr><td colspan="11" class="hutsunea">Ez dago mugimendurik.<br><span>Lehenengo egoera gaurko datatik aurrera erregistra dezakezu.</span></td></tr>`;
+  <tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(x.zergatia||"—")}</td><td>—</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${esc(x.nork||"")}</td><td>${esc([x.bateria!=null?`Bateria ${x.bateria}`:"",x.funda?"Funda":"",x.micro?"Mikroa":"",x.karga?"Karga":"",x.kablea_12v?"12V":""].filter(Boolean).join(" · ")||"—")}</td>
+  <td><button class="smallBtn edit-mov" data-id="${x.id}">Editatu</button> <button class="smallBtn ezabatu" data-id="${x.id}">Ezabatu</button></td></tr>`).join("") :
+  `<tr><td colspan="8" style="padding:35px;text-align:center;color:#68788d">Ez dago mugimendurik.</td></tr>`;
   document.querySelectorAll(".ezabatu").forEach(b=>b.onclick=async()=>{
     if(!confirm("Mugimendu hau ezabatu nahi duzu?"))return;
     const {error}=await supabase.from("mugimenduak").delete().eq("id",Number(b.dataset.id));
