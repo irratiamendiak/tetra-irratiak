@@ -5,3 +5,5 @@
 .modalhead{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e5eaf0;position:sticky;top:0;background:#fff;z-index:2}
 .modalhead button{font-size:24px;border:0;background:transparent;cursor:pointer}
 #histContent{padding:22px}.historytable{overflow:auto}.historytable table{min-width:900px}
+.brand{flex-direction:row;align-items:center;gap:12px;min-width:320px}.brandTalkie{width:42px;height:62px;object-fit:cover;object-position:center top;border-radius:5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}.brand b{font-size:28px;display:block}.brand span{display:block}.zerrenda{overflow:auto}.zerrenda table{min-width:920px}.txartela table{min-width:900px}
+@media(max-width:650px){.brandTalkie{width:34px;height:52px}.brand b{font-size:23px}.brand{min-width:unset}}

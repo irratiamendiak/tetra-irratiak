@@ -55,16 +55,26 @@ async function kargatuIrratiak(){
     const n=Number(q);
     query=query.or(`alias.ilike.%${q}%,marka.ilike.%${q}%,modelo.ilike.%${q}%${Number.isFinite(n)?`,zka.eq.${n}`:""}`);
   }
-  const {data,error}=await query;
+  const [{data,error},{data:movData,error:movError}]=await Promise.all([
+    query,
+    supabase.from("mugimenduak").select("radio_id,arreta,teltronic,noiztik,id").order("noiztik",{ascending:false}).order("id",{ascending:false})
+  ]);
   if(error){mezua(error.message,false);return;}
+  if(movError){mezua(movError.message,false);return;}
+  const azkenMugimendua=new Map();
+  (movData||[]).forEach(m=>{ if(m.radio_id!=null && !azkenMugimendua.has(m.radio_id)) azkenMugimendua.set(m.radio_id,m); });
   $("#irratiaKop").textContent=`${data.length} irrati`;
-  $("#irratiaRows").innerHTML=data.map(r=>`
+  $("#irratiaRows").innerHTML=data.map(r=>{
+    const m=azkenMugimendua.get(r.id)||{};
+    return `
     <tr>
       <td>${esc(r.zka??"")}</td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
       <td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td>
+      <td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td>
       <td><span class="egoera ${r.baja_definitiva?"baja":r.sustituido?"ordezkatua":"aktibo"}">${r.baja_definitiva?"Behin betiko baja":r.sustituido?"Ordezkatua":"Aktibo"}</span></td>
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
   document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>irekiIrratia(Number(b.dataset.id)));
 }
 $("#bilaketa").addEventListener("input",kargatuIrratiak);
@@ -84,15 +94,23 @@ async function irekiIrratia(id){
   currentRadioData=data;
   $("#izenburua").textContent=data.alias||data.zka||"Irratia";
   $("#zkaBurua").textContent=data.zka??"";
-  const fields={zka:"ZKA",alias:"Alias",marka:"Marka",modelo:"Modeloa",tei:"TEI",mota:"Mota"};
-  $("#datuak").innerHTML=Object.entries(fields).map(([k,l])=>`<div><span>${l}</span><strong>${esc(data[k]??"")}</strong></div>`).join("")+
-    `<div><span>GPS</span><strong>${data.gps?"Bai":"Ez"}</strong></div>
-     <div><span>Gateway</span><strong>${data.gateway?"Bai":"Ez"}</strong></div>
-     <div><span>Behin betiko baja</span><strong>${data.baja_definitiva?"Bai":"Ez"}</strong></div>
-     <div><span>Ordezkatua</span><strong>${data.sustituido?"Bai":"Ez"}</strong></div>`;
   $("#editatzeko").value=JSON.stringify(data);
   $("#mugimenduEditPanela").hidden=true;
   await kargatuMugimenduak(id);
+  const azken=currentMovements[0]||{};
+  $("#datuak").innerHTML=`
+    <div><span>ZKA</span><strong>${esc(data.zka??"")}</strong></div>
+    <div><span>Alias</span><strong>${esc(data.alias??"")}</strong></div>
+    <div><span>Marka</span><strong>${esc(data.marka??"")}</strong></div>
+    <div><span>Modeloa</span><strong>${esc(data.modelo??"")}</strong></div>
+    <div><span>TEI</span><strong>${esc(data.tei??"")}</strong></div>
+    <div><span>Mota</span><strong>${esc(data.mota??"")}</strong></div>
+    <div><span>Arreta Zb.</span><strong>${esc(azken.arreta??"")}</strong></div>
+    <div><span>RMA</span><strong>${esc(azken.teltronic??"")}</strong></div>
+    <div><span>GPS</span><strong>${data.gps?"Bai":"Ez"}</strong></div>
+    <div><span>Gateway</span><strong>${data.gateway?"Bai":"Ez"}</strong></div>
+    <div><span>Behin betiko baja</span><strong>${data.baja_definitiva?"Bai":"Ez"}</strong></div>
+    <div><span>Ordezkatua</span><strong>${data.sustituido?"Bai":"Ez"}</strong></div>`;
 }
 function itxiIrratia(){ $("#irratiXehetasuna").hidden=true; currentRadio=null; currentRadioData=null; }
 
@@ -122,9 +140,9 @@ async function kargatuMugimenduak(id){
   $("#mugimenduKop").textContent=`${currentMovements.length} erregistro`;
   $("#mugimenduRows").innerHTML=currentMovements.length?currentMovements.map(x=>`
   <tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td>
-  <td>${x.bateria==null?"":esc(x.bateria)}</td><td>${x.funda?"Bai":"Ez"}</td><td>${x.micro?"Bai":"Ez"}</td><td>${x.karga?"Bai":"Ez"}</td>
+  <td>${x.bateria==null?"":esc(x.bateria)}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${x.funda?"Bai":"Ez"}</td><td>${x.micro?"Bai":"Ez"}</td><td>${x.karga?"Bai":"Ez"}</td>
   <td><button class="txiki edit-mov" data-id="${x.id}">Editatu</button> <button class="txiki ezabatu" data-id="${x.id}">Ezabatu</button></td></tr>`).join("") :
-  `<tr><td colspan="9" class="hutsunea">Ez dago mugimendurik.<br><span>Lehenengo egoera gaurko datatik aurrera erregistra dezakezu.</span></td></tr>`;
+  `<tr><td colspan="11" class="hutsunea">Ez dago mugimendurik.<br><span>Lehenengo egoera gaurko datatik aurrera erregistra dezakezu.</span></td></tr>`;
   document.querySelectorAll(".ezabatu").forEach(b=>b.onclick=async()=>{
     if(!confirm("Mugimendu hau ezabatu nahi duzu?"))return;
     const {error}=await supabase.from("mugimenduak").delete().eq("id",Number(b.dataset.id));
@@ -177,7 +195,7 @@ function openHistory(){
   $("#histTitle").textContent=`Historia — ${currentRadioData.alias||currentRadioData.zka||""}`;
   $("#histContent").innerHTML=currentMovements.length ? `
     <p>${currentMovements.length} erregistro historiko.</p>
-    <div class="historytable"><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta</th><th>Teltronic</th><th>Osagarriak</th></tr></thead>
+    <div class="historytable"><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th><th>Osagarriak</th></tr></thead>
     <tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.bateria??"")}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td><td>${[x.funda?"Funda":"",x.micro?"Mikroa":"",x.karga?"Karga":"",x.kablea_12v?"12V":""] .filter(Boolean).join(", ")}</td></tr>`).join("")}</tbody></table></div>` :
     `<p class="hutsunea">Ez dago mugimendurik.</p>`;
   $("#histModal").hidden=false;
@@ -204,7 +222,7 @@ async function exportExcel(){
     const rows=currentMovements.map(x=>({
       ZKA:currentRadioData.zka??"", Alias:currentRadioData.alias??"", TEI:currentRadioData.tei??"",
       Hasiera:x.noiztik??"", Amaiera:x.noizarte??"", Nork:x.nork??"", Arrazoia:x.zergatia??"",
-      Bateria:x.bateria??"", Arreta:x.arreta??"", Teltronic:x.teltronic??"",
+      Bateria:x.bateria??"", "Arreta Zb.":x.arreta??"", RMA:x.teltronic??"",
       Funda:x.funda?"Bai":"Ez", Mikroa:x.micro?"Bai":"Ez", Karga:x.karga?"Bai":"Ez", "12V kablea":x.kablea_12v?"Bai":"Ez"
     }));
     const wb=XLSX.utils.book_new();
@@ -223,11 +241,11 @@ function exportPDF(){
   if(!currentRadioData)return;
   const w=window.open("","_blank");
   if(!w){mezua("Nabigatzaileak leihoa blokeatu du.",false);return;}
-  const rows=currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.bateria??"")}</td><td>${esc(x.teltronic??"")}</td></tr>`).join("");
+  const rows=currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(fmtDate(x.noizarte))}</td><td>${esc(x.nork||"")}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.bateria??"")}</td><td>${esc(x.arreta??"")}</td><td>${esc(x.teltronic??"")}</td></tr>`).join("");
   w.document.write(`<html><head><title>TETRA ${esc(currentRadioData.alias||"")}</title><style>
   body{font-family:Arial,sans-serif;padding:28px;color:#18253d}h1{margin:0 0 6px}small{color:#68748a}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:7px;text-align:left;font-size:11px}th{background:#eef3f8}@media print{button{display:none}}
-  </style></head><body><h1>TETRA — ${esc(currentRadioData.alias||"Irratia")}</h1><small>ZKA: ${esc(currentRadioData.zka??"")} · TEI: ${esc(currentRadioData.tei??"")} · Marka: ${esc(currentRadioData.marka??"")} · Modeloa: ${esc(currentRadioData.modelo??"")}</small>
-  <h2>Historia (${currentMovements.length})</h2><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Teltronic</th></tr></thead><tbody>${rows}</tbody></table>
+  </style></head><body><h1>TETRA — ${esc(currentRadioData.alias||"Irratia")}</h1><small>ZKA: ${esc(currentRadioData.zka??"")} · TEI: ${esc(currentRadioData.tei??"")} · Marka: ${esc(currentRadioData.marka??"")} · Modeloa: ${esc(currentRadioData.modelo??"")} · Arreta Zb.: ${esc(currentMovements[0]?.arreta??"")} · RMA: ${esc(currentMovements[0]?.teltronic??"")}</small>
+  <h2>Historia (${currentMovements.length})</h2><table><thead><tr><th>Hasiera</th><th>Amaiera</th><th>Nork</th><th>Arrazoia</th><th>Bateria</th><th>Arreta Zb.</th><th>RMA</th></tr></thead><tbody>${rows}</tbody></table>
   <script>window.onload=()=>window.print();</script></body></html>`);
   w.document.close();
 }
