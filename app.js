@@ -67,7 +67,7 @@ async function kargatuIrratiak(){
   $("#irratiaRows").innerHTML=data.map(r=>{
     const m=azkenMugimendua.get(r.id)||{};
     return `
-    <tr class="radio-row" data-radio-row="${r.id}">
+    <tr class="radio-row" data-radio-row="${r.id}" onclick="window.openRadio(${r.id})">
       <td><button class="esteka zka-link" data-id="${r.id}">${esc(r.zka??"")}</button></td><td><button class="esteka" data-id="${r.id}">${esc(r.alias??"")}</button></td>
       <td>${esc(r.marka??"")}</td><td>${esc(r.modelo??"")}</td>
       <td>${esc(m.arreta??"")}</td><td>${esc(m.teltronic??"")}</td>
@@ -75,33 +75,7 @@ async function kargatuIrratiak(){
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
     </tr>`;
   }).join("");
-  // Clic robusto en la lista completa: la fila entera es seleccionable.
-  // El listener se instala en document con captura para que siga funcionando
-  // aunque otro elemento intercepte el evento.
-  const rows = $("#irratiaRows");
-  rows.querySelectorAll("tr.radio-row").forEach(row => {
-    row.style.cursor = "pointer";
-  });
-}
-$("#bilaketa").addEventListener("input",kargatuIrratiak);
-$("#irratiBerria").onclick=()=>irekiIrratia(null);
-$("#itxiIrratia").onclick=()=>itxiIrratia();
-
-// Un único listener global para las filas de la lista.
-// Esto evita los problemas de eventos al regenerar la tabla.
-if (!window.__tetraRowClickInstalled) {
-  window.__tetraRowClickInstalled = true;
-  document.addEventListener("click", (e) => {
-    const row = e.target.closest("#irratiaRows tr.radio-row");
-    if (!row) return;
-    const id = Number(row.dataset.radioRow);
-    if (!Number.isFinite(id)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    irekiIrratia(id);
-  }, true);
-}
-
+  // La fila completa se abre mediante onclick directo en la propia fila.
 async function irekiIrratia(id){
   currentRadio=id;
   $("#irratiXehetasuna").hidden=false;
@@ -277,3 +251,6 @@ $("#navHist").onclick=()=>{ if(currentRadio&&currentRadioData) openHistory(); el
 $("#navExp").onclick=()=>currentRadio?exportExcel():mezua("Lehenengo hautatu irrati bat.",false);
 
 saioa();
+
+// Expuesto globalmente para el clic directo de las filas.
+window.openRadio = irekiIrratia;
