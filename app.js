@@ -75,8 +75,19 @@ async function kargatuIrratiak(){
       <td><button class="txiki" data-id="${r.id}">Ikusi</button></td>
     </tr>`;
   }).join("");
-  // Un único manejador sobre la tabla: ZKA, alias, botón "Ikusi" o cualquier celda de la fila abren la radio.
+  // Selección robusta: cada fila y sus botones tienen su propio manejador.
+  // Así funciona tanto en la lista completa como cuando se usa el buscador.
   const rows = $("#irratiaRows");
+  rows.querySelectorAll("tr.radio-row").forEach(row => {
+    const id = Number(row.dataset.radioRow);
+    const abrir = (e) => {
+      if (e) e.preventDefault();
+      if (Number.isFinite(id)) irekiIrratia(id);
+    };
+    row.addEventListener("click", abrir);
+    row.querySelectorAll("button").forEach(btn => btn.addEventListener("click", abrir));
+  });
+  // Respaldo por delegación para cualquier fila que se vuelva a insertar.
   rows.onclick = (e) => {
     const row = e.target.closest("tr.radio-row");
     if (!row || !rows.contains(row)) return;
