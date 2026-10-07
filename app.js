@@ -11,14 +11,16 @@ function fmtDate(v){return v?new Date(v+"T00:00:00").toLocaleDateString("eu-ES")
 function today(){return new Date().toISOString().slice(0,10);}
 function showMsg(t,ok=true){const e=$("#mezua"); if(!e)return; e.textContent=t; e.className=ok?"ondo":"errorea"; setTimeout(()=>{if(e.textContent===t)e.textContent=""},3500);}
 function statusOf(r){return r.baja_definitiva?{cls:"retired",text:"Baja"}:r.sustituido?{cls:"replaced",text:"Ordezkatua"}:{cls:"active",text:"Aktibo"};}
+function normalizaModelo(v){return String(v||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Z0-9]/g,"");}
 function imageFor(r){
-  const m=String(r.modelo||"").toUpperCase().replace(/[\s_-]+/g,"");
-  if(m.includes("MTP3550")) return "data/talkie.png";
-  if(m.includes("HTT500")) return "data/htt500.png";
-  if(m.includes("MDT400")) return "https://static-data2.manualslib.com/product-images/135/13465/1346499/raw.jpg";
-  if(m.includes("DT410")) return "https://www.rigpix.com/protrx/teltronic_dt410.jpg";
-  return "data/talkie.png";
+  const m=normalizaModelo(r.modelo);
+  if(m === "MTP3550") return "data/mtp3550.png";
+  if(m === "HTT500") return "data/htt500.png";
+  if(m === "MDT400") return "https://static-data2.manualslib.com/product-images/135/13465/1346499/raw.jpg";
+  if(m === "DT410") return "data/dt410.png";
+  return "";
 }
+
 function locationOf(r){return r.kokapena||"—";}
 function dash(v){return v===null||v===undefined||v===""?"-":String(v);}
 function sailaOf(r){return r.mota||"—";}
@@ -70,7 +72,8 @@ function renderPagination(totalPages){
 
 async function selectRadio(id,scroll=true){
   const r=radios.find(x=>x.id===Number(id)); if(!r)return; currentRadio=r.id; currentRadioData=r; renderRows(); $("#detailCard").hidden=false; $("#movementSection").hidden=false; $("#editPanela").hidden=true; $("#mugimenduEditPanela").hidden=true;
-  const m=latest(r); const st=statusOf(r); $("#izenburua").textContent=r.alias||r.zka||"Irratia"; $("#statusBurua").className=`status ${st.cls}`; $("#statusBurua").textContent=st.text; $("#radioPhoto").src=imageFor(r); $("#radioPhoto").alt=`${r.marka||""} ${r.modelo||""}`;
+  const m=latest(r); const st=statusOf(r); $("#izenburua").textContent=r.alias||r.zka||"Irratia"; $("#statusBurua").className=`status ${st.cls}`; $("#statusBurua").textContent=st.text;
+  const photo=$("#radioPhoto"); const src=imageFor(r); photo.alt=`${r.marka||""} ${r.modelo||""}`; photo.referrerPolicy="no-referrer"; photo.onerror=()=>{photo.onerror=null; photo.src="data/talkie.png"; photo.alt=`${r.marka||""} ${r.modelo||""}`;}; photo.src=src||"data/talkie.png";
   $("#datuak").innerHTML=`<div><span>Marka:</span><strong>${esc(r.marka??"")}</strong></div><div><span>Modeloa:</span><strong>${esc(r.modelo??"")}</strong></div><div><span>TEI:</span><strong>${esc(r.tei??"")}</strong></div><div><span>ZKA:</span><strong>${esc(r.zka??"")}</strong></div><div><span>Saila:</span><strong>${esc(sailaOf(r))}</strong></div><div><span>Egoera:</span><strong>${esc(st.text)}</strong></div><div><span>Azken mugimendua:</span><strong>${esc(fmtDate(m.noiztik))}</strong></div><div><span>Kokapena:</span><strong>${esc(locationOf(r))}</strong></div>`;
   await loadMovements(r.id); $("#movementTitle").textContent=`(${esc(r.alias||r.zka||"")})`; if(scroll)setTimeout(()=>$("#detailCard").scrollIntoView({behavior:"smooth",block:"nearest"}),40);
 }

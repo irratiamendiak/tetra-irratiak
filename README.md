@@ -24,3 +24,10 @@ Bertsio hau **v6.5 egonkorraren** gainean prestatuta dago. Ez du Supabase eskema
 ## Egiaztapena
 - `app.js`-k Node sintaxi-egiaztapena gainditzen du.
 - Supabase URL eta publishable key-a proiektukoak dira; ez dago service_role/secret key-rik.
+
+
+## Fotografías de modelos
+- Motorola MTP3550: `data/mtp3550.png` (foto aportada por el usuario).
+- Teltronic HTT-500: `data/htt500.png` (foto aportada por el usuario).
+- Teltronic DT-410: `data/dt410.png` (foto aportada por el usuario).
+- Teltronic MDT-400: se mantiene la imagen ya configurada.
