@@ -18,7 +18,7 @@ function imageFor(r){
   if(m === "HTT500") return "data/htt500.jpg";
   if(m === "MDT400") return "https://static-data2.manualslib.com/product-images/135/13465/1346499/raw.jpg";
   if(m === "DT410") return "data/dt410.png";
-  if(m === "MXM600") return "data/mxm600.png";
+  if(m === "MXM600") return "data/mxm600.jpg";
   return "";
 }
 
