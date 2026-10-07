@@ -11,7 +11,14 @@ function fmtDate(v){return v?new Date(v+"T00:00:00").toLocaleDateString("eu-ES")
 function today(){return new Date().toISOString().slice(0,10);}
 function showMsg(t,ok=true){const e=$("#mezua"); if(!e)return; e.textContent=t; e.className=ok?"ondo":"errorea"; setTimeout(()=>{if(e.textContent===t)e.textContent=""},3500);}
 function statusOf(r){return r.baja_definitiva?{cls:"retired",text:"Baja"}:r.sustituido?{cls:"replaced",text:"Ordezkatua"}:{cls:"active",text:"Aktibo"};}
-function imageFor(r){const m=(r.modelo||"").toUpperCase().replace(/\s+/g,""); const brand=(r.marka||"").toUpperCase(); if(m.includes("HTT-500".replace(/\s+/g,""))||m.includes("HTT500")||brand.includes("TELTRONIC")){return "data/htt500.png";} if(m.includes("MTP3550")||brand.includes("MOTOROLA")){return "data/talkie.png";} return "data/talkie.png";}
+function imageFor(r){
+  const m=String(r.modelo||"").toUpperCase().replace(/[\s_-]+/g,"");
+  if(m.includes("MTP3550")) return "data/talkie.png";
+  if(m.includes("HTT500")) return "data/htt500.png";
+  if(m.includes("MDT400")) return "https://static-data2.manualslib.com/product-images/135/13465/1346499/raw.jpg";
+  if(m.includes("DT410")) return "https://www.rigpix.com/protrx/teltronic_dt410.jpg";
+  return "data/talkie.png";
+}
 function locationOf(r){return r.kokapena||"—";}
 function dash(v){return v===null||v===undefined||v===""?"-":String(v);}
 function sailaOf(r){return r.mota||"—";}
