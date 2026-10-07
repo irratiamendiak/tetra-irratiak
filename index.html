@@ -93,7 +93,7 @@
 
     <section id="mugimenduEditPanela" class="formCard card" hidden>
       <h3 id="mugimenduFormTitle">Mugimendu berria</h3>
-      <form id="mugimenduForm"><input id="mugimenduId" type="hidden"><div class="formgrid"><label>Nork<input id="m_nork"></label><label>Hasiera<input id="m_noiztik" type="date"></label><label>Amaiera<input id="m_noizarte" type="date"></label><label>Arrazoia<input id="m_zergatia"></label><label>Bateria<input id="m_bateria" type="number" step="any"></label><label>Arreta Zb.<input id="m_arreta" type="number" step="any"></label><label>RMA<input id="m_teltronic"></label></div><div class="checks"><label><input id="m_funda" type="checkbox"> Funda</label><label><input id="m_micro" type="checkbox"> Mikroa</label><label><input id="m_karga" type="checkbox"> Karga</label><label><input id="m_kablea" type="checkbox"> 12V kablea</label></div><div class="formButtons"><button class="primaryBtn">Gorde</button><button type="button" id="cancelMugimendu" class="actionBtn">Utzi</button></div></form>
+      <form id="mugimenduForm"><input id="mugimenduId" type="hidden"><input id="m_noizarte" type="hidden"><div class="formgrid"><label>Data<input id="m_noiztik" type="date" required></label><label>Mugimendua<input id="m_zergatia" required></label><label>Nork<input id="m_nork"></label><label>Arreta Zb.<input id="m_arreta" type="number" step="any"></label><label>RMA<input id="m_teltronic"></label><label class="fullField">Oharrak<textarea id="m_oharrak" rows="3"></textarea></label></div><div class="formButtons"><button class="primaryBtn">Gorde</button><button type="button" id="cancelMugimendu" class="actionBtn">Utzi</button></div></form>
     </section>
   </section>
 </main>
