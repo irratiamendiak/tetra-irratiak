@@ -14,8 +14,8 @@ function statusOf(r){return r.baja_definitiva?{cls:"retired",text:"Baja"}:r.sust
 function normalizaModelo(v){return String(v||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Z0-9]/g,"");}
 function imageFor(r){
   const m=normalizaModelo(r.modelo);
-  if(m === "MTP3550") return "data/mtp3550.png";
-  if(m === "HTT500") return "data/htt500.png";
+  if(m === "MTP3550") return "data/mtp3550.jpg";
+  if(m === "HTT500") return "data/htt500.jpg";
   if(m === "MDT400") return "https://static-data2.manualslib.com/product-images/135/13465/1346499/raw.jpg";
   if(m === "DT410") return "data/dt410.png";
   return "";
