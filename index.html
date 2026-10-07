@@ -36,7 +36,7 @@
 
   <section id="app" hidden>
     <div class="toolbar">
-      <div class="searchBox"><span>⌕</span><input id="bilaketa" placeholder="Bilatu... (ZKA, alias, marka, modeloa, serie zenbakia...)" autocomplete="off"></div>
+      <div class="searchBox"><span>⌕</span><input id="bilaketa" placeholder="Bilatu... (ZKA, alias, marka, modeloa, TEI...)" autocomplete="off"></div>
       <select id="egoeraFilter"><option value="">Egoera: Guztiak</option><option value="aktibo">Egoera: Aktiboak</option><option value="ordezkatua">Egoera: Ordezkatuak</option><option value="baja">Egoera: Behin betiko baja</option></select>
       <select id="motaFilter"><option value="">Saila: Guztiak</option></select>
       <select id="kokapenaFilter"><option value="">Kokapena: Guztiak</option></select>
@@ -85,7 +85,7 @@
       <h3>Irratia editatu</h3>
       <form id="irratiForm">
         <input id="id" type="hidden">
-        <div class="formgrid"><label>ZKA<input id="zka" type="number"></label><label>Alias<input id="alias"></label><label>Marka<input id="marka"></label><label>Modeloa<input id="modelo"></label><label>TEI<input id="tei" type="number"></label><label>Saila<input id="mota"></label></div>
+        <div class="formgrid"><label>ZKA<input id="zka" type="number"></label><label>Alias<input id="alias"></label><label>Marka<input id="marka"></label><label>Modeloa<input id="modelo"></label><label>TEI<input id="tei" type="number"></label><label>Saila<input id="mota"></label><label>Kokapena<input id="kokapena"></label></div>
         <div class="checks"><label><input id="gps" type="checkbox"> GPS</label><label><input id="gateway" type="checkbox"> Gateway</label><label><input id="baja_definitiva" type="checkbox"> Behin betiko baja</label><label><input id="sustituido" type="checkbox"> Ordezkatua</label></div>
         <div class="formButtons"><button class="primaryBtn">Gorde</button><button type="button" id="cancelEdit" class="actionBtn">Utzi</button></div>
       </form>
