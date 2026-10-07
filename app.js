@@ -96,14 +96,52 @@ function openMovementForm(m=null){if(!currentRadio)return;editingMovement=m;$("#
 $("#mugimenduBerria").onclick=()=>openMovementForm();$("#cancelMugimendu").onclick=()=>$("#mugimenduEditPanela").hidden=true;
 $("#mugimenduForm").addEventListener("submit",async e=>{e.preventDefault();const obj={radio_id:currentRadio,nork:$("#m_nork").value.trim()||null,noiztik:$("#m_noiztik").value||null,noizarte:$("#m_noizarte").value||null,zergatia:$("#m_zergatia").value.trim()||null,arreta:$("#m_arreta").value===""?null:Number($("#m_arreta").value),teltronic:$("#m_teltronic").value.trim()||null,oharrak:$("#m_oharrak").value.trim()||null};const id=$("#mugimenduId").value;const result=id?await supabase.from("mugimenduak").update(obj).eq("id",Number(id)):await supabase.from("mugimenduak").insert(obj);if(result.error){showMsg(result.error.message,false);return;}$("#mugimenduEditPanela").hidden=true;await loadData();showMsg("Mugimendua gordeta");});
 
-function openHistory(){if(!currentRadioData)return;$("#histTitle").textContent=`Historia — ${currentRadioData.alias||currentRadioData.zka||"Irratia"}`;$("#histContent").innerHTML=`<div class="historytable"><table><thead><tr><th>Data</th><th>Mugimendua</th><th>Nork</th><th>Arreta Zb.</th><th>RMA</th><th>Oharrak</th></tr></thead><tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(x.zergatia||"—")}</td><td>${esc(x.nork||"—")}</td><td>${esc(dash(x.arreta))}</td><td>${esc(dash(x.teltronic))}</td><td>${esc(movementNotes(x))}</td></tr>`).join("")}</tbody></table></div>`;$("#histModal").hidden=false;}
-$("#historiala").onclick=openHistory;$("#navHist").onclick=openHistory;$("#closeHist").onclick=()=>$("#histModal").hidden=true;$("#histModal").addEventListener("click",e=>{if(e.target.id==="histModal")$("#histModal").hidden=true;});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#histModal").hidden=true;});
-$("#navMov").onclick=()=>$("#movementSection").scrollIntoView({behavior:"smooth",block:"start"});
-function exportExcel(){if(!currentRadioData)return showMsg("Lehenengo hautatu irrati bat.",false);const rows=currentMovements.map(x=>({Data:fmtDate(x.noiztik),Mugimendua:x.zergatia||"",Nork:x.nork||"",Arreta_Zb:dash(x.arreta),RMA:dash(x.teltronic),Oharrak:movementNotes(x)}));const blob=new Blob(["\ufeff"+['Data;Mugimendua;Nork;Arreta Zb.;RMA;Oharrak',...rows.map(r=>Object.values(r).map(v=>`"${String(v).replaceAll('"','""')}"`).join(';'))].join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`TETRA_${currentRadioData.alias||currentRadioData.id}.csv`;a.click();URL.revokeObjectURL(a.href);}
-function exportPDF(){if(!currentRadioData)return showMsg("Lehenengo hautatu irrati bat.",false);const w=window.open("","_blank");if(!w)return;w.document.write(`<html><head><title>TETRA ${esc(currentRadioData.alias||"")}</title><style>body{font-family:Arial;padding:24px;color:#17283e}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:7px;text-align:left;font-size:11px}th{background:#edf2f6}</style></head><body><h1>TETRA IRRATIAK — ${esc(currentRadioData.alias||"")}</h1><p>Marka: ${esc(currentRadioData.marka||"")} · Modeloa: ${esc(currentRadioData.modelo||"")} · TEI: ${esc(currentRadioData.tei??"")} · ZKA: ${esc(currentRadioData.zka??"")}</p><table><thead><tr><th>Data</th><th>Mugimendua</th><th>Nork</th><th>Arreta Zb.</th><th>RMA</th><th>Oharrak</th></tr></thead><tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(x.zergatia||"")}</td><td>${esc(x.nork||"")}</td><td>${esc(dash(x.arreta))}</td><td>${esc(dash(x.teltronic))}</td><td>${esc(movementNotes(x))}</td></tr>`).join("")}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();}
-$("#navExp").onclick=exportExcel;
+function radioRowsForExport(){return radios.map(r=>({
+  Kodea:r.alias||r.zka||"",
+  Marka:r.marka||"",
+  Modeloa:r.modelo||"",
+  TEI:teiOf(r),
+  ZKA:zkaOf(r),
+  Saila:sailaOf(r),
+  Egoera:statusOf(r).text,
+  Kokapena:locationOf(r)
+}));}
+function downloadBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
+function safeFileName(v){return String(v||"irratia").replace(/[^a-z0-9_-]+/gi,"_");}
+function exportRadiosExcel(){
+  const rows=radioRowsForExport();
+  if(window.XLSX){const wb=XLSX.utils.book_new();const ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,"Irratiak");XLSX.writeFile(wb,"TETRA_Irratiak.xlsx");return;}
+  const csv=['Kodea;Marka;Modeloa;TEI;ZKA;Saila;Egoera;Kokapena',...rows.map(r=>Object.values(r).map(v=>`"${String(v).replaceAll('"','""')}"`).join(';'))].join("\n");downloadBlob(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),"TETRA_Irratiak.csv");
+}
+function exportRadiosPDF(){
+  const w=window.open("","_blank");if(!w)return;
+  const rows=radioRowsForExport();
+  w.document.write(`<html><head><title>TETRA IRRATIAK — Irratiak</title><style>@page{size:landscape}body{font-family:Arial;padding:20px;color:#17283e}h1{font-size:22px;margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left;font-size:9px}th{background:#edf2f6}</style></head><body><h1>TETRA IRRATIAK — Irratiak (${rows.length})</h1><table><thead><tr><th>Kodea</th><th>Marka</th><th>Modeloa</th><th>TEI</th><th>ZKA</th><th>Saila</th><th>Egoera</th><th>Kokapena</th></tr></thead><tbody>${rows.map(r=>`<tr>${Object.values(r).map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+function movementRowsForExport(){return currentMovements.map(x=>({Data:fmtDate(x.noiztik),Mugimendua:x.zergatia||"",Nork:x.nork||"",Arreta_Zb:dash(x.arreta),RMA:dash(x.teltronic),Oharrak:movementNotes(x)}));}
+function detailRowsForExport(){const r=currentRadioData;const m=latest(r);const st=statusOf(r);return [
+  {Eremua:"Marka",Balioa:r.marka||""},{Eremua:"Modeloa",Balioa:r.modelo||""},{Eremua:"TEI",Balioa:teiOf(r)},{Eremua:"ZKA",Balioa:zkaOf(r)},
+  {Eremua:"Saila",Balioa:sailaOf(r)},{Eremua:"Egoera",Balioa:st.text},{Eremua:"Azken mugimendua",Balioa:fmtDate(m.noiztik)},{Eremua:"Kokapena",Balioa:locationOf(r)}
+];}
+function exportMovExcel(){
+  if(!currentRadioData)return showMsg("Lehenengo hautatu irrati bat.",false);
+  const movements=movementRowsForExport(), ficha=detailRowsForExport();
+  if(window.XLSX){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(ficha),"Fitxa");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(movements),"Mugimenduak");XLSX.writeFile(wb,`TETRA_${safeFileName(currentRadioData.alias||currentRadioData.id)}_Mugimenduak.xlsx`);return;}
+  const csvFicha=['Eremua;Balioa',...ficha.map(r=>`"${r.Eremua}";"${String(r.Balioa).replaceAll('"','""')}"`)].join("\n");const csvMov=['Data;Mugimendua;Nork;Arreta Zb.;RMA;Oharrak',...movements.map(r=>Object.values(r).map(v=>`"${String(v).replaceAll('"','""')}"`).join(';'))].join("\n");downloadBlob(new Blob(["\ufeff"+csvFicha+"\n\n"+csvMov],{type:"text/csv;charset=utf-8"}),`TETRA_${safeFileName(currentRadioData.alias||currentRadioData.id)}_Mugimenduak.csv`);
+}
+function exportMovPDF(){
+  if(!currentRadioData)return showMsg("Lehenengo hautatu irrati bat.",false);
+  const r=currentRadioData,m=latest(r),st=statusOf(r),photo=imageFor(r)||"data/talkie.png";
+  const w=window.open("","_blank");if(!w)return;
+  w.document.write(`<html><head><title>TETRA ${esc(r.alias||"")}</title><style>body{font-family:Arial;padding:24px;color:#17283e}.ficha{display:flex;gap:22px;border:1px solid #ccd8e3;padding:14px;margin-bottom:18px}.ficha img{width:130px;height:180px;object-fit:contain}.meta{display:grid;grid-template-columns:150px 1fr;gap:7px;font-size:11px}.meta b{color:#52667b}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:7px;text-align:left;font-size:10px}th{background:#edf2f6}h1{font-size:20px;margin:0 0 12px}</style></head><body><h1>TETRA IRRATIAK — ${esc(r.alias||"")}</h1><div class="ficha"><img src="${esc(photo)}" alt="${esc(r.marka||"")} ${esc(r.modelo||"")}"><div class="meta"><b>Marka</b><span>${esc(r.marka||"")}</span><b>Modeloa</b><span>${esc(r.modelo||"")}</span><b>TEI</b><span>${esc(teiOf(r))}</span><b>ZKA</b><span>${esc(zkaOf(r))}</span><b>Saila</b><span>${esc(sailaOf(r))}</span><b>Egoera</b><span>${esc(st.text)}</span><b>Azken mugimendua</b><span>${esc(fmtDate(m.noiztik))}</span><b>Kokapena</b><span>${esc(locationOf(r))}</span></div></div><h2>Mugimenduak</h2><table><thead><tr><th>Data</th><th>Mugimendua</th><th>Nork</th><th>Arreta Zb.</th><th>RMA</th><th>Oharrak</th></tr></thead><tbody>${currentMovements.map(x=>`<tr><td>${esc(fmtDate(x.noiztik))}</td><td>${esc(x.zergatia||"—")}</td><td>${esc(x.nork||"—")}</td><td>${esc(dash(x.arreta))}</td><td>${esc(dash(x.teltronic))}</td><td>${esc(movementNotes(x))}</td></tr>`).join("")}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
 
-function setNav(on){$("#navMov").disabled=!on;$("#navHist").disabled=!on;$("#navExp").disabled=!on;$("#logout").disabled=!on;}
+$("#exportRadiosExcel").onclick=exportRadiosExcel;
+$("#exportRadiosPDF").onclick=exportRadiosPDF;
+$("#exportMovExcel").onclick=exportMovExcel;
+$("#exportMovPDF").onclick=exportMovPDF;
+
+function setNav(on){$("#logout").disabled=!on;}
 async function saioa(){const {data:{session}}=await supabase.auth.getSession();if(!session){$("#app").hidden=true;$("#login").hidden=false;setNav(false);return;}$("#login").hidden=true;$("#app").hidden=false;setNav(true);await loadData();}
 $("#loginForm").addEventListener("submit",async e=>{e.preventDefault();const {error}=await supabase.auth.signInWithPassword({email:$("#email").value.trim(),password:$("#password").value});if(error)showMsg(error.message,false);else await saioa();});
 $("#logout").onclick=async()=>{await supabase.auth.signOut();currentRadio=null;currentRadioData=null;await saioa();};

@@ -11,12 +11,6 @@
   <div class="brand">
     <div class="brandText"><h1>TETRA IRRATIAK</h1><p>Irrati eta mugimenduen kudeaketa</p></div>
   </div>
-  <nav class="mainnav">
-    <button class="navBtn active" id="navRadios">▣ <span>Irratiak</span></button>
-    <button class="navBtn" id="navMov">☷ <span>Mugimenduak</span></button>
-    <button class="navBtn" id="navHist">◷ <span>Historia</span></button>
-    <button class="navBtn" id="navExp">⇩ <span>Esportatu</span></button>
-  </nav>
   <button id="logout" class="logout">♙&nbsp; Irten</button>
 </header>
 
@@ -45,7 +39,7 @@
 
     <div class="mainGrid">
       <section id="radioList" class="radioList card">
-        <div class="sectionTitle"><h2>Irratiak <span id="irratiaKop">(0)</span></h2></div>
+        <div class="sectionTitle"><h2>Irratiak <span id="irratiaKop">(0)</span></h2><div class="sectionExports"><button id="exportRadiosExcel" class="exportBtn">⇩ Excel</button><button id="exportRadiosPDF" class="exportBtn">⇩ PDF</button></div></div>
         <div class="tableScroll">
           <table class="radioTable">
             <thead><tr><th>Kodea</th><th>Marka</th><th>Modeloa</th><th>TEI</th><th>ZKA</th><th>Saila</th><th>Egoera</th><th>Kokapena</th></tr></thead>
@@ -65,14 +59,13 @@
         </div>
         <div class="detailActions">
           <button id="editIrratia" class="actionBtn primary">✎&nbsp; Editatu</button>
-          <button id="historiala" class="actionBtn">◷&nbsp; Historia</button>
           <button id="mugimenduBerria" class="actionBtn">＋&nbsp; Mugimendu berria</button>
         </div>
       </aside>
     </div>
 
     <section id="movementSection" class="movementCard card" hidden>
-      <div class="movementHead"><h2>◷&nbsp; Mugimenduak <span id="movementTitle"></span></h2><span id="mugimenduKop"></span></div>
+      <div class="movementHead"><h2>◷&nbsp; Mugimenduak <span id="movementTitle"></span></h2><div class="movementTools"><span id="mugimenduKop"></span><button id="exportMovExcel" class="exportBtn">⇩ Excel</button><button id="exportMovPDF" class="exportBtn">⇩ PDF</button></div></div>
       <div class="tableScroll">
         <table class="movementTable">
           <thead><tr><th>Data</th><th>Mugimendua</th><th>Nork</th><th>Arreta Zb.</th><th>RMA</th><th>Oharrak</th><th></th></tr></thead>
@@ -98,8 +91,8 @@
   </section>
 </main>
 
-<div id="histModal" class="modal" hidden><div class="modalbox"><div class="modalhead"><h2 id="histTitle">Historia</h2><button id="closeHist">×</button></div><div id="histContent" class="modalContent"></div></div></div>
 <input id="editatzeko" type="hidden">
-<script type="module" src="app.js?v=20261007-2330"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script type="module" src="app.js?v=20261007-2355"></script>
 </body>
 </html>
